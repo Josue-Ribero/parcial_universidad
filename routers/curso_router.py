@@ -7,7 +7,7 @@ from ..utils.enum import CreditosCurso, JornadaCurso
 router = APIRouter(prefix="/curso", tags=["Cursos"])
 
 # CREATE - Crear curso
-@router.post("/crear", response_model=CursoCreate, status_code=201)
+@router.post("/crear", response_model=Curso, status_code=201)
 async def crearCurso(
     session: SessionDep,
     codigo: str = Form(...),
