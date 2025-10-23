@@ -33,3 +33,27 @@ async def crearCurso(
     session.refresh(nuevoCurso)
 
     return nuevoCurso # Devuelve el objeto curso
+
+
+
+# READ - Obtener todos los cursos que hay
+@router.get("/todos", response_model=list[Curso])
+async def listaCursos(session: SessionDep):
+    listaCursos = session.exec(select(Curso)).all()
+    return listaCursos
+
+
+
+# READ - Obtener el curso filtrado por codigo
+@router.get("/codigo/{codigo}", response_model=list[Curso])
+async def listaCursos(codigo: int, session: SessionDep):
+    cursoDB = session.get(Curso, codigo)
+    return cursoDB
+
+
+
+# READ - Obtener lista de cursos filtrados por creditos
+@router.get("/creditos/{creditos}", response_model=list[Curso])
+async def listaCursos(creditos: int, session: SessionDep):
+    listaCursos = session.exec(select(Curso)).all()
+    return listaCursos
