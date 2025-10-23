@@ -1,12 +1,22 @@
 # Importacion de Enum
 from enum import Enum
 
+# ENUMERACIONES CURSOS
+
 # Cantidad de creditos de un curso
 class CreditosCurso(Enum):
     UNO = 1
     DOS = 2
     TRES = 3
     CUATRO = 4
+
+# Horarios cursos
+class JornadaCurso(Enum):
+    DIURNA = "DIURNA"
+    NOCTURNA = "NOCTURNA"
+
+
+# ENUMERACIONES ESTUDIANTES
 
 # Semestre que esta cursando el estudiante
 class Semestre(Enum):
@@ -22,3 +32,9 @@ class Semestre(Enum):
     DECIMO = 10
     UNDECIMO = 11
     DUODECIMO = 12
+
+
+# ENUMERACIONES MATRICULAS
+class EstadoMatricula(Enum):
+    MATRICULADO = "MATRICULADO"
+    DESMATRICULADO = "DESMATRICULADO"
