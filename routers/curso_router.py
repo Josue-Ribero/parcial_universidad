@@ -1,7 +1,9 @@
 from fastapi import APIRouter, HTTPException, Form
 from db.db import SessionDep
 from sqlmodel import select
-from ..models.curso import Curso, CursoCreate
+from ..models.curso import Curso
+from ..models.matricula import Matricula
+from ..models.estudiante import Estudiante
 from ..utils.enum import CreditosCurso, JornadaCurso
 
 router = APIRouter(prefix="/curso", tags=["Cursos"])
@@ -18,7 +20,7 @@ async def crearCurso(
     # Validar si el curso ya existe
     cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).first()
     if cursoDB:
-        raise HTTPException(400, "El curso ingresado ya existe")
+        raise HTTPException(400, "Ya hay un curso registrado con ese codigo")
     
     # Si no existe, lo crea
     nuevoCurso = Curso(
@@ -46,7 +48,7 @@ async def listaCursos(session: SessionDep):
 
 # READ - Obtener el curso filtrado por codigo
 @router.get("/codigo/{codigo}", response_model=list[Curso])
-async def listaCursos(codigo: int, session: SessionDep):
+async def cursosPorCodigo(codigo: int, session: SessionDep):
     cursoDB = session.get(Curso, codigo)
     return cursoDB
 
@@ -54,6 +56,14 @@ async def listaCursos(codigo: int, session: SessionDep):
 
 # READ - Obtener lista de cursos filtrados por creditos
 @router.get("/creditos/{creditos}", response_model=list[Curso])
-async def listaCursos(creditos: int, session: SessionDep):
+async def cursosPorCreditos(creditos: int, session: SessionDep):
     listaCursos = session.exec(select(Curso)).all()
     return listaCursos
+
+
+
+# READ - Estudiantes matriculados en un curso
+@router.get("/{cursoID}/estudiantes", response_model=list[Estudiante])
+async def estudiantesPorCurso(cursoID: int, session: SessionDep):
+    estudiantesEnCurso = session.exec(select(Estudiante).join(Matricula, Matricula.estudianteID == Estudiante.id).where(Matricula.cursoID == cursoID)).all()
+    return estudiantesEnCurso
