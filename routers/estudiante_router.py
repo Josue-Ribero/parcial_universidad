@@ -33,3 +33,19 @@ async def crearEstudiante(
     session.refresh(nuevoEstudiante)
 
     return nuevoEstudiante # Devuelve el objeto estudiante
+
+
+
+# READ - Obtener todos los estudiantes que hay
+@router.get("/todos", response_model=list[Estudiante])
+async def listaEstudiantes(session: SessionDep):
+    listaEstudiantes = session.exec(select(Estudiante)).all()
+    return listaEstudiantes
+
+
+
+# READ - Obtener lista de estudiantes filtrados por semestre
+@router.get("/semestre/{semestre}", response_model=list[Estudiante])
+async def listaEstudiantes(semestre: int, session: SessionDep):
+    listaEstudiantes = session.exec(select(Estudiante).where(Estudiante.semestre == semestre)).all()
+    return listaEstudiantes
