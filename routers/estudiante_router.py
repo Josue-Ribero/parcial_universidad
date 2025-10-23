@@ -7,7 +7,7 @@ from ..utils.enum import Semestre
 router = APIRouter(prefix="/estudiante", tags=["Estudiantes"])
 
 # CREATE - Crear estudiante
-@router.post("/crear", response_model=EstudianteCreate, status_code=201)
+@router.post("/crear", response_model=Estudiante, status_code=201)
 async def crearEstudiante(
     session: SessionDep,
     cedula: str = Form(...),
