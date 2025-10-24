@@ -11,8 +11,7 @@ router = APIRouter(prefix="/matricula", tags=["Matriculas"])
 async def matricularEstudiante(
     session: SessionDep,
     cursoID: int = Form(...),
-    estudianteID: int = Form(...),
-    matriculado: EstadoMatricula = Form(...)
+    estudianteID: int = Form(...)
     ):
     # Validar si el matricula ya existe
     MatriculaDB = session.exec(select(Matricula).where(Matricula.cursoID == cursoID, Matricula.estudianteID == estudianteID)).first()
@@ -23,7 +22,7 @@ async def matricularEstudiante(
     nuevoMatricula = Matricula(
         cursoID=cursoID,
         estudianteID=estudianteID,
-        matriculado=matriculado
+        matriculado=EstadoMatricula.MATRICULADO
     )
     # Insertar el matricula a la DB
     session.add(nuevoMatricula)
@@ -37,7 +36,7 @@ async def matricularEstudiante(
 # READ - Obtener todos los matriculas que hay
 @router.get("/todos", response_model=list[Matricula])
 async def listaMatriculas(session: SessionDep):
-    listaMatriculas = session.exec(select(Matricula)).all()
+    listaMatriculas = session.exec(select(Matricula).where(Matricula.matriculado == EstadoMatricula.MATRICULADO)).all()
     return listaMatriculas
 
 
@@ -45,7 +44,13 @@ async def listaMatriculas(session: SessionDep):
 # READ - Obtener un estudiante y sus cursos
 @router.get("/estudiante/{estudianteID}", response_model=list[Matricula])
 async def cursosDeEstudiante(estudianteID: int, session: SessionDep):
+    estudianteDB = session.exec(select(Matricula).where(Matricula.estudianteID == estudianteID)).first()
+    if not estudianteDB:
+        raise HTTPException(404, "Estudiante no encontrado")
+
     matriculaDB = session.exec(select(Matricula).where(Matricula.estudianteID == estudianteID)).all()
+    if not matriculaDB:
+        raise HTTPException(404, "No tienes cursos")
     return matriculaDB
 
 
@@ -53,7 +58,9 @@ async def cursosDeEstudiante(estudianteID: int, session: SessionDep):
 # READ - Obtener un curso y sus estudiantes asociados
 @router.get("/curso/{cursoID}", response_model=list[Matricula])
 async def estudiantesEnCurso(cursoID: int, session: SessionDep):
-    matriculaDB = session.exec(select(Matricula).where(Matricula.cursoID == cursoID, Matricula.matriculado == True)).all()
+    matriculaDB = session.exec(select(Matricula).where(Matricula.cursoID == cursoID, Matricula.matriculado == EstadoMatricula.MATRICULADO)).all()
+    if not matriculaDB:
+        raise HTTPException(404, "No hay estudiantes en este curso")
     return matriculaDB
 
 
@@ -89,12 +96,33 @@ async def actualizarMatricula(
 
 
 
+# PATCH - Volver a matricular a un estudiante
+@router.patch("/{estudianteID}/rematricular", response_model=Matricula)
+async def rematricularEstudiante(estudianteID: int, session: SessionDep):
+    estudianteDB = session.exec(select(Matricula).where(Matricula.estudianteID == estudianteID)).first()
+    if not estudianteDB:
+        raise HTTPException(404, "Estudiante no encontrado")
+    
+    estudianteDB.matriculado = EstadoMatricula.MATRICULADO
+    
+    # Insertar el cambio en la DB
+    session.add(estudianteDB)
+    session.commit()
+    session.refresh(estudianteDB)
+
+    return estudianteDB
+
+
+
 
 # DELETE - Desmatricular a un estudiante
-@router.patch("/{estudianteID}/desmatricular", response_model=Matricula)
+@router.delete("/{estudianteID}/desmatricular", response_model=Matricula)
 async def desmatricularEstudiante(estudianteID: int, session: SessionDep):
     estudianteDB = session.exec(select(Matricula).where(Matricula.estudianteID == estudianteID)).first()
-    estudianteDB.matriculado = False
+    if not estudianteDB:
+        raise HTTPException(404, "Estudiante no encontrado")
+    
+    estudianteDB.matriculado = EstadoMatricula.DESMATRICULADO
     
     # Insertar el cambio en la DB
     session.add(estudianteDB)
