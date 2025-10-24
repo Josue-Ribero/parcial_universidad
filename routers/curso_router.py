@@ -22,6 +22,9 @@ async def crearCurso(
     if cursoDB:
         raise HTTPException(400, "Ya hay un curso registrado con ese codigo")
     
+    # Convertir el nombre a mayusculas
+    nombre = nombre.upper()
+
     # Si no existe, lo crea
     nuevoCurso = Curso(
         codigo=codigo,
@@ -83,6 +86,18 @@ async def estudiantesPorCurso(codigo: str, session: SessionDep):
         raise HTTPException(404, "No hay estudiantes en ese curso")
     
     return estudiantesEnCurso
+
+
+
+# READ - Obtener lista de cursos filtrados por horario
+@router.get("/horario/{horario}", response_model=list[Curso])
+async def cursosPorCreditos(session: SessionDep, horario: HorarioCurso):
+    listaCursos = session.exec(select(Curso).where(Curso.horario == horario)).all()
+    # Si no hay cursos con esos creditos
+    if len(listaCursos) == 0:
+        raise HTTPException(404, "No hay cursos en ese horario")
+    
+    return listaCursos
 
 
 
