@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Form
 from ..db.db import SessionDep
 from sqlmodel import select
-from ..models.estudiante import Estudiante
+from ..models.estudiante import Estudiante, EstudianteUpdate
 from ..models.matricula import Matricula
 from ..models.curso import Curso
 from ..utils.enum import Semestre
@@ -51,6 +51,8 @@ async def listaEstudiantes(session: SessionDep):
 async def estudiantesPorSemestre(semestre: int, session: SessionDep):
     semestreEnum = Semestre(str(semestre))
     listaEstudiantes = session.exec(select(Estudiante).where(Estudiante.semestre == semestreEnum)).all()
+    if len(listaEstudiantes) == 0:
+        raise HTTPException(404, "No hay estudiantes en ese semestre")
     return listaEstudiantes
 
 
@@ -62,3 +64,23 @@ async def misCursos(estudianteID: int, session: SessionDep):
     if len(listaMisCursos) == 0:
         raise HTTPException(404, "No tienes cursos")
     return listaMisCursos
+
+
+
+# UPDATE - Actualizar el semestre de un estudiante
+@router.patch("/{cedula}/actualizar", response_model=Estudiante)
+async def actualizarJornadaCurso(session: SessionDep, cedula: str, semestre: Semestre = Form(...)):
+    # Verificar que el curso exista
+    estudianteDB = session.exec(select(Estudiante).where(Estudiante.cedula == cedula)).first()
+    # Si no existe el curso
+    if not estudianteDB:
+        raise HTTPException(404, "Estudiante no encontrado")
+    
+    # Cambiar la jornada del curso
+    estudianteDB.semestre = semestre
+    #Insertar curso actualizado en la DB
+    session.add(estudianteDB)
+    session.commit() # Guardar los cambios
+    session.refresh(estudianteDB)
+    
+    return estudianteDB
