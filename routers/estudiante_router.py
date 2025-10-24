@@ -4,6 +4,7 @@ from sqlmodel import select
 from ..models.estudiante import Estudiante, EstudianteHistorico
 from ..models.matricula import Matricula, MatriculaHistorica
 from ..models.curso import Curso
+from sqlalchemy import or_
 from ..utils.enum import Semestre, EstadoMatricula
 
 router = APIRouter(prefix="/estudiante", tags=["Estudiantes"])
@@ -24,6 +25,10 @@ async def crearEstudiante(
     
     # Convertir el nombre a mayusculas
     nombre = nombre.upper()
+
+    # Validar que la cedula sea numerica
+    if not cedula.isdigit():
+        raise HTTPException(400, "La cedula debe ser numerica")
 
     # Validar que la CC sea valida
     if not 7 <= len(cedula) <= 10:
@@ -85,9 +90,34 @@ async def estudiantesPorNombre(nombre: str, session: SessionDep):
 
 
 
+# READ - Cursos de un estudiante
+@router.get("/{cedula}/mis-cursos", response_model=list[Curso])
+async def misCursos(cedula: str, session: SessionDep):
+    # Validar que la cedula sea numerica
+    if not cedula.isdigit():
+        raise HTTPException(400, "La cedula debe ser numerica")
+
+    listaMisCursos = session.exec(
+        select(Curso)
+            .join(Matricula, Matricula.codigo == Curso.codigo)
+            .where(Matricula.cedula == cedula,
+                   or_(
+                       Matricula.matriculado == EstadoMatricula.MATRICULADO,
+                       Matricula.matriculado == EstadoMatricula.FINALIZADO
+                   )
+            )
+        ).all()
+    # Si el estudiante no tiene cursos
+    if len(listaMisCursos) == 0:
+        raise HTTPException(404, "No tienes cursos")
+    
+    return listaMisCursos
+
+
+
 # READ - Obtener un estudiante filtrado por semestre y email
 @router.get("/{semestre}/{email}", response_model=Estudiante)
-async def estudiantesPorSemestreYemail(semestre: Semestre, email: str, session: SessionDep):
+async def estudiantePorSemestreYemail(semestre: Semestre, email: str, session: SessionDep):
     estudianteDB = session.exec(select(Estudiante).where(Estudiante.semestre == semestre or Estudiante.email == email)).first()
     # Si no existe un estudiante con ese email
     if not estudianteDB:
@@ -100,25 +130,13 @@ async def estudiantesPorSemestreYemail(semestre: Semestre, email: str, session: 
 
 
 
-# READ - Cursos de un estudiante
-@router.get("/{cedula}/mis-cursos", response_model=list[Curso])
-async def misCursos(cedula: str, session: SessionDep):
-    listaMisCursos = session.exec(
-        select(Curso)
-            .join(Matricula, Matricula.codigo == Curso.codigo)
-            .where(Matricula.cedula == cedula, Matricula.matriculado == EstadoMatricula.MATRICULADO)
-        ).all()
-    # Si el estudiante no tiene cursos
-    if len(listaMisCursos) == 0:
-        raise HTTPException(404, "No tienes cursos")
-    
-    return listaMisCursos
-
-
-
 # UPDATE - Actualizar el semestre de un estudiante
 @router.patch("/{cedula}/actualizar", response_model=Estudiante)
 async def actualizarJornadaCurso(session: SessionDep, cedula: str, semestre: Semestre = Form(...)):
+    # Validar que la cedula sea numerica
+    if not cedula.isdigit():
+        raise HTTPException(400, "La cedula debe ser numerica")
+
     # Verificar que el curso exista
     estudianteDB = session.exec(select(Estudiante).where(Estudiante.cedula == cedula)).first()
     # Si no existe el curso
@@ -139,6 +157,10 @@ async def actualizarJornadaCurso(session: SessionDep, cedula: str, semestre: Sem
 # DELETE - Eliminar un estudiante
 @router.delete("/{cedula}/eliminar")
 async def eliminarEstudiante(cedula: str, session: SessionDep):
+    # Validar que la cedula sea numerica
+    if not cedula.isdigit():
+        raise HTTPException(400, "La cedula debe ser numerica")
+
     # Validar si ya existe el estudiante
     estudianteDB = session.exec(select(Estudiante).where(Estudiante.cedula == cedula)).first()
     # Si no existe la matricula
