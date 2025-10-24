@@ -60,6 +60,10 @@ async def listaCursos(session: SessionDep):
 # READ - Obtener el curso filtrado por codigo
 @router.get("/codigo/{codigo}", response_model=Curso)
 async def cursosPorCodigo(codigo: str, session: SessionDep):
+    # Convertir el codigo a mayuscula
+    codigo = codigo.upper()
+
+    # Validar si existe el codigo
     cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).first()
     # Si no existe el curso con ese codigo
     if not cursoDB:
@@ -84,6 +88,15 @@ async def cursosPorCreditos(session: SessionDep, creditos: CreditosCurso):
 # READ - Estudiantes matriculados en un curso
 @router.get("/{codigo}/estudiantes", response_model=list[Estudiante])
 async def estudiantesPorCurso(codigo: str, session: SessionDep):
+    # Convertir el codigo a mayuscula
+    codigo = codigo.upper()
+
+    # Validar si el codigo existe
+    cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).first()
+    # Si no existe el curso
+    if not cursoDB:
+        raise HTTPException(404, "El curso no existe")
+
     estudiantesEnCurso = session.exec(select(Estudiante).join(Matricula, Matricula.cedula == Estudiante.cedula).where(Matricula.codigo == codigo)).all()
     # Si no hay estudiantes en ese curso
     if len(estudiantesEnCurso) == 0:
