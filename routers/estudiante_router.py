@@ -48,9 +48,8 @@ async def listaEstudiantes(session: SessionDep):
 
 # READ - Obtener lista de estudiantes filtrados por semestre
 @router.get("/semestre/{semestre}", response_model=list[Estudiante])
-async def estudiantesPorSemestre(semestre: int, session: SessionDep):
-    semestreEnum = Semestre(str(semestre))
-    listaEstudiantes = session.exec(select(Estudiante).where(Estudiante.semestre == semestreEnum)).all()
+async def estudiantesPorSemestre(semestre: Semestre, session: SessionDep):
+    listaEstudiantes = session.exec(select(Estudiante).where(Estudiante.semestre == semestre)).all()
     if len(listaEstudiantes) == 0:
         raise HTTPException(404, "No hay estudiantes en ese semestre")
     return listaEstudiantes
