@@ -1,6 +1,6 @@
 from .enum import (
     CreditosCurso,
-    JornadaCurso,
+    HorarioCurso,
     Semestre,
     EstadoMatricula,
 )
