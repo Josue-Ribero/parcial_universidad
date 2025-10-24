@@ -47,9 +47,9 @@ async def listaCursos(session: SessionDep):
 
 
 # READ - Obtener el curso filtrado por codigo
-@router.get("/codigo/{codigo}", response_model=list[Curso])
+@router.get("/codigo/{codigo}", response_model=Curso)
 async def cursosPorCodigo(codigo: str, session: SessionDep):
-    cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).all()
+    cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).first()
     return cursoDB
 
 
@@ -74,7 +74,7 @@ async def estudiantesPorCurso(cursoID: int, session: SessionDep):
 
 
 # UPDATE - Actualizar la jornada de un curso
-@router.patch("/{codigo}/actualizar", response_model=CursoUpdate)
+@router.patch("/{codigo}/actualizar", response_model=Curso)
 async def actualizarJornadaCurso(session: SessionDep, codigo: str, jornada: JornadaCurso = Form(...)):
     # Verificar que el curso exista
     cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).first()
