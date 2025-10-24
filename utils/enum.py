@@ -42,3 +42,4 @@ class Semestre(Enum):
 class EstadoMatricula(Enum):
     MATRICULADO = "MATRICULADO"
     DESMATRICULADO = "DESMATRICULADO"
+    FINALIZADO = "FINALIZADO"

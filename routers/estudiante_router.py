@@ -205,11 +205,21 @@ async def eliminarEstudiante(cedula: str, session: SessionDep):
     # Guardar matrículas relacionadas en el histórico antes de borrar
     matriculasDB = session.exec(select(Matricula).where(Matricula.cedula == cedula)).all()
     for matricula in matriculasDB:
+        # Determinar razón de eliminación según estado de la matricula
+        if matricula.matriculado == EstadoMatricula.FINALIZADO:
+            razon = "Curso finalizado - estudiante eliminado"
+        elif matricula.matriculado == EstadoMatricula.DESMATRICULADO:
+            razon = "Curso desmatriculado - estudiante eliminado"
+        elif matricula.matriculado == EstadoMatricula.MATRICULADO:
+            razon = "Curso en progreso - estudiante eliminado"
+        else:
+            razon = "Estado desconocido - estudiante eliminado"
+
         matriculaHistorica = MatriculaHistorica(
             codigo=matricula.codigo,
             cedula=matricula.cedula,
             matriculado=matricula.matriculado,
-            razonEliminado="Estudiante eliminado"
+            razonEliminado=razon
         )
         # Insertar las matriculas del curso al historico
         session.add(matriculaHistorica)
