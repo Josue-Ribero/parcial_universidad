@@ -26,6 +26,9 @@ async def crearEstudiante(
     # Convertir el nombre a mayusculas
     nombre = nombre.upper()
 
+    # Convertir el nombre a mayusculas
+    email = email.lower()
+
     # Validar que la cedula sea numerica
     if not cedula.isdigit():
         raise HTTPException(400, "La cedula debe ser numerica")
@@ -70,6 +73,22 @@ async def estudiantePorCedula(cedula: str, session: SessionDep):
 
     # Validar si existe el codigo
     estudianteDB = session.exec(select(Estudiante).where(Estudiante.cedula == cedula)).first()
+    # Si no existe el curso con ese codigo
+    if not estudianteDB:
+        raise HTTPException(404, "No existe ese estudiante")
+    
+    return estudianteDB
+
+
+
+# READ - Obtener el estudiante filtrado por email
+@router.get("/email/{email}", response_model=Estudiante)
+async def estudiantePorCedula(email: str, session: SessionDep):
+    # Convertir el nombre a mayusculas
+    email = email.lower()
+
+    # Validar si existe el codigo
+    estudianteDB = session.exec(select(Estudiante).where(Estudiante.email == email)).first()
     # Si no existe el curso con ese codigo
     if not estudianteDB:
         raise HTTPException(404, "No existe ese estudiante")
