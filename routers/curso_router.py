@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Form
 from ..db.db import SessionDep
 from sqlmodel import select
-from ..models.curso import Curso, CursoUpdate
-from ..models.matricula import Matricula
+from ..models.curso import Curso, CursoHistorico
+from ..models.matricula import Matricula, MatriculaHistorica
 from ..models.estudiante import Estudiante
 from ..utils.enum import CreditosCurso, JornadaCurso
 
@@ -103,3 +103,42 @@ async def actualizarJornadaCurso(session: SessionDep, codigo: str, jornada: Jorn
     session.refresh(cursoDB)
     
     return cursoDB
+
+
+
+# DELETE - Eliminar un curso
+@router.delete("/{cursoID}/eliminar")
+async def eliminarCurso(cursoID: int, session: SessionDep):
+    # Validar si ya existe el curso
+    cursoDB = session.exec(select(Curso).where(Curso.id == cursoID)).first()
+    # Si no existe el curso
+    if not cursoDB:
+        raise HTTPException(404, "Estudiante no encontrado")
+    
+    # Guardar matrículas relacionadas en el histórico antes de borrar
+    matriculasDB = session.exec(select(Matricula).where(Matricula.cursoID == cursoID)).all()
+    for matricula in matriculasDB:
+        matriculaHistorica = MatriculaHistorica(
+            cursoID=matricula.cursoID,
+            estudianteID=matricula.estudianteID,
+            matriculado=matricula.matriculado,
+            razonEliminado="Curso eliminado"
+        )
+        # Insertar las matriculas del curso al historico
+        session.add(matriculaHistorica)
+    session.commit() # Guardar los cambios
+    
+    # Copiar a curso historico
+    cursoHistorico = CursoHistorico(
+        codigo=cursoDB.codigo,
+        nombre=cursoDB.nombre,
+        creditos=cursoDB.creditos,
+        jornada=cursoDB.jornada
+    )
+    session.add(cursoHistorico)
+    
+    # Eliminar el curso de la DB
+    session.delete(cursoDB)
+    session.commit() # Guardar los cambios
+
+    return {"Mensaje": "Estudiante eliminado correctamente"}

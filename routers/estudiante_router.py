@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException, Form
 from ..db.db import SessionDep
 from sqlmodel import select
-from ..models.estudiante import Estudiante, EstudianteUpdate
-from ..models.matricula import Matricula
+from ..models.estudiante import Estudiante, EstudianteHistorico
+from ..models.matricula import Matricula, MatriculaHistorica
 from ..models.curso import Curso
-from ..utils.enum import Semestre
+from ..utils.enum import Semestre, EstadoMatricula
 
 router = APIRouter(prefix="/estudiante", tags=["Estudiantes"])
 
@@ -65,7 +65,11 @@ async def estudiantesPorSemestre(semestre: Semestre, session: SessionDep):
 # READ - Cursos de un estudiante
 @router.get("/{estudianteID}/mis-cursos", response_model=list[Curso])
 async def misCursos(estudianteID: int, session: SessionDep):
-    listaMisCursos = session.exec(select(Curso).join(Matricula, Matricula.cursoID == Curso.id).where(Matricula.estudianteID == estudianteID)).all()
+    listaMisCursos = session.exec(
+        select(Curso)
+            .join(Matricula, Matricula.cursoID == Curso.id)
+            .where(Matricula.estudianteID == estudianteID, Matricula.matriculado == EstadoMatricula.MATRICULADO)
+        ).all()
     # Si el estudiante no tiene cursos
     if len(listaMisCursos) == 0:
         raise HTTPException(404, "No tienes cursos")
@@ -91,3 +95,42 @@ async def actualizarJornadaCurso(session: SessionDep, cedula: str, semestre: Sem
     session.refresh(estudianteDB)
     
     return estudianteDB
+
+
+
+# DELETE - Eliminar un estudiante
+@router.delete("/{estudianteID}/eliminar")
+async def eliminarEstudiante(estudianteID: int, session: SessionDep):
+    # Validar si ya existe el estudiante
+    estudianteDB = session.exec(select(Estudiante).where(Estudiante.id == estudianteID)).first()
+    # Si no existe la matricula
+    if not estudianteDB:
+        raise HTTPException(404, "Estudiante no encontrado")
+    
+    # Guardar matrículas relacionadas en el histórico antes de borrar
+    matriculasDB = session.exec(select(Matricula).where(Matricula.estudianteID == estudianteID)).all()
+    for matricula in matriculasDB:
+        matriculaHistorica = MatriculaHistorica(
+            cursoID=matricula.cursoID,
+            estudianteID=matricula.estudianteID,
+            matriculado=matricula.matriculado,
+            razonEliminado="Estudiante eliminado"
+        )
+        # Insertar las matriculas del estudiante al historico
+        session.add(matriculaHistorica)
+    session.commit() # Guardar los cambios
+    
+    # Copiar a estudiante historico
+    estudianteHistorico = EstudianteHistorico(
+        cedula=estudianteDB.cedula,
+        nombre=estudianteDB.nombre,
+        email=estudianteDB.email,
+        semestre=estudianteDB.semestre
+    )
+    session.add(estudianteHistorico)
+    
+    # Eliminar el estudiante de la DB
+    session.delete(estudianteDB)
+    session.commit() # Guardar los cambios
+
+    return {"Mensaje": "Estudiante eliminado correctamente"}
