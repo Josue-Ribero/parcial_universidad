@@ -25,6 +25,10 @@ async def crearEstudiante(
     # Convertir el nombre a mayusculas
     nombre = nombre.upper()
 
+    # Validar que la CC sea valida
+    if not 7 <= len(cedula) <= 10:
+        raise HTTPException(400, "La cedula debe tener entre 7 y 10 numeros")
+
     # Si no existe, lo crea
     nuevoEstudiante = Estudiante(
         cedula=cedula,
@@ -68,10 +72,13 @@ async def estudiantesPorSemestre(semestre: Semestre, session: SessionDep):
 # READ - Obtener un estudiante filtrado por semestre y email
 @router.get("/{semestre}/{email}", response_model=Estudiante)
 async def estudiantesPorSemestre(semestre: Semestre, email: str, session: SessionDep):
-    estudianteDB = session.exec(select(Estudiante).where(Estudiante.semestre == semestre, Estudiante.email == email)).first()
+    estudianteDB = session.exec(select(Estudiante).where(Estudiante.semestre == semestre or Estudiante.email == email)).first()
     # Si no existe un estudiante con ese email
     if not estudianteDB:
-        raise HTTPException(404, f"Estudiante con email {email} no esta en el semestre {semestre}")
+        raise HTTPException(404, f"Estudiante no encontrado")
+    # Si el estudiante no esta en el semestre ingresado
+    if estudianteDB.semestre != semestre:
+        raise HTTPException(404, f"Estudiante con email {email} no esta en el semestre {semestre.value}")
     
     return estudianteDB
 

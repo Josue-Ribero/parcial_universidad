@@ -25,6 +25,10 @@ async def crearCurso(
     # Convertir el nombre a mayusculas
     nombre = nombre.upper()
 
+    # Validar que el codigo sea valido
+    if not len(codigo) == 7:
+        raise HTTPException(400, "El codigo debe tener entre 7 caracteres")
+
     # Si no existe, lo crea
     nuevoCurso = Curso(
         codigo=codigo,
