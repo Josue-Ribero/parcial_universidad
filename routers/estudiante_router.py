@@ -61,6 +61,22 @@ async def listaEstudiantes(session: SessionDep):
     return listaEstudiantes
 
 
+# READ - Obtener el estudiante filtrado por cedula
+@router.get("/cedula/{cedula}", response_model=Curso)
+async def estudiantePorCedula(cedula: str, session: SessionDep):
+    # Validar que la cedula sea numerica
+    if not cedula.isdigit():
+        raise HTTPException(400, "La cedula debe ser numerica")
+
+    # Validar si existe el codigo
+    estudianteDB = session.exec(select(Estudiante).where(Estudiante.cedula == cedula)).first()
+    # Si no existe el curso con ese codigo
+    if not estudianteDB:
+        raise HTTPException(404, "No existe ese estudiante")
+    
+    return estudianteDB
+
+
 
 # READ - Obtener lista de estudiantes filtrados por semestre
 @router.get("/semestre/{semestre}", response_model=list[Estudiante])
