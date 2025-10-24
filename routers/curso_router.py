@@ -75,9 +75,9 @@ async def cursosPorCreditos(session: SessionDep, creditos: CreditosCurso):
 
 
 # READ - Estudiantes matriculados en un curso
-@router.get("/{cursoID}/estudiantes", response_model=list[Estudiante])
-async def estudiantesPorCurso(cursoID: int, session: SessionDep):
-    estudiantesEnCurso = session.exec(select(Estudiante).join(Matricula, Matricula.estudianteID == Estudiante.id).where(Matricula.cursoID == cursoID)).all()
+@router.get("/{codigo}/estudiantes", response_model=list[Estudiante])
+async def estudiantesPorCurso(codigo: str, session: SessionDep):
+    estudiantesEnCurso = session.exec(select(Estudiante).join(Matricula, Matricula.cedula == Estudiante.cedula).where(Matricula.codigo == codigo)).all()
     # Si no hay estudiantes en ese curso
     if len(estudiantesEnCurso) == 0:
         raise HTTPException(404, "No hay estudiantes en ese curso")
@@ -107,20 +107,20 @@ async def actualizarJornadaCurso(session: SessionDep, codigo: str, jornada: Jorn
 
 
 # DELETE - Eliminar un curso
-@router.delete("/{cursoID}/eliminar")
-async def eliminarCurso(cursoID: int, session: SessionDep):
+@router.delete("/{codigo}/eliminar")
+async def eliminarCurso(codigo: str, session: SessionDep):
     # Validar si ya existe el curso
-    cursoDB = session.exec(select(Curso).where(Curso.id == cursoID)).first()
+    cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).first()
     # Si no existe el curso
     if not cursoDB:
         raise HTTPException(404, "Estudiante no encontrado")
     
     # Guardar matrículas relacionadas en el histórico antes de borrar
-    matriculasDB = session.exec(select(Matricula).where(Matricula.cursoID == cursoID)).all()
+    matriculasDB = session.exec(select(Matricula).where(Matricula.codigo == codigo)).all()
     for matricula in matriculasDB:
         matriculaHistorica = MatriculaHistorica(
-            cursoID=matricula.cursoID,
-            estudianteID=matricula.estudianteID,
+            codigo=matricula.codigo,
+            cedula=matricula.cedula,
             matriculado=matricula.matriculado,
             razonEliminado="Curso eliminado"
         )

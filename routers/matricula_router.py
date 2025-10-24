@@ -10,20 +10,20 @@ router = APIRouter(prefix="/matricula", tags=["Matriculas"])
 @router.post("/matricular-estudiante", response_model=Matricula, status_code=201)
 async def matricularEstudiante(
     session: SessionDep,
-    cursoID: int = Form(...),
-    estudianteID: int = Form(...)
+    codigo: str = Form(...),
+    cedula: str = Form(...)
     ):
     # Validar si el matricula ya existe
-    matriculaDB = session.exec(select(Matricula).where(Matricula.cursoID == cursoID, Matricula.estudianteID == estudianteID)).first()
+    matriculaDB = session.exec(select(Matricula).where(Matricula.codigo == codigo, Matricula.cedula == cedula)).first()
     # Validar si el estudiante ya esta con estado MATRICULADO en ese curso
     if matriculaDB and matriculaDB.matriculado == EstadoMatricula.MATRICULADO:
         raise HTTPException(400, "El estudiante ya esta matriculado en ese curso")
     
     # Verificar si el estudiante ya esta matriculado en otro curso (esta activo)
     matriculadoEnOtroCurso = session.exec(select(Matricula).where(
-        Matricula.estudianteID == estudianteID,
+        Matricula.cedula == cedula,
         Matricula.matriculado == EstadoMatricula.MATRICULADO,
-        Matricula.cursoID != cursoID)
+        Matricula.codigo != codigo)
         ).first()
     # Si ya esta matriculado en otro curso
     if matriculadoEnOtroCurso:
@@ -39,8 +39,8 @@ async def matricularEstudiante(
     
     # Si no esta matriculado, lo crea
     nuevaMatricula = Matricula(
-        cursoID=cursoID,
-        estudianteID=estudianteID,
+        codigo=codigo,
+        cedula=cedula,
         matriculado=EstadoMatricula.MATRICULADO
     )
     # Insertar el matricula a la DB
@@ -61,13 +61,14 @@ async def listaMatriculas(session: SessionDep):
 
 
 # READ - Obtener un estudiante y sus cursos
-@router.get("/estudiante/{estudianteID}", response_model=list[Matricula])
-async def cursosDeEstudiante(estudianteID: int, session: SessionDep):
-    estudianteDB = session.exec(select(Matricula).where(Matricula.estudianteID == estudianteID)).first()
+@router.get("/estudiante/{cedula}", response_model=list[Matricula])
+async def cursosDeEstudiante(cedula: str, session: SessionDep):
+    # Validar si el estudiante existe
+    estudianteDB = session.exec(select(Matricula).where(Matricula.cedula == cedula, Matricula.matriculado == EstadoMatricula.MATRICULADO)).first()
     if not estudianteDB:
-        raise HTTPException(404, "Estudiante no encontrado")
+        raise HTTPException(404, "Estudiante sin matriculas")
 
-    matriculaDB = session.exec(select(Matricula).where(Matricula.estudianteID == estudianteID)).all()
+    matriculaDB = session.exec(select(Matricula).where(Matricula.cedula == cedula)).all()
     if not matriculaDB:
         raise HTTPException(404, "No tienes cursos")
     return matriculaDB
@@ -75,9 +76,9 @@ async def cursosDeEstudiante(estudianteID: int, session: SessionDep):
 
 
 # READ - Obtener un curso y sus estudiantes asociados
-@router.get("/curso/{cursoID}", response_model=list[Matricula])
-async def estudiantesEnCurso(cursoID: int, session: SessionDep):
-    matriculaDB = session.exec(select(Matricula).where(Matricula.cursoID == cursoID, Matricula.matriculado == EstadoMatricula.MATRICULADO)).all()
+@router.get("/curso/{codigo}", response_model=list[Matricula])
+async def estudiantesEnCurso(codigo: str, session: SessionDep):
+    matriculaDB = session.exec(select(Matricula).where(Matricula.codigo == codigo, Matricula.matriculado == EstadoMatricula.MATRICULADO)).all()
     if not matriculaDB:
         raise HTTPException(404, "No hay estudiantes en este curso")
     return matriculaDB
@@ -89,8 +90,8 @@ async def estudiantesEnCurso(cursoID: int, session: SessionDep):
 async def actualizarMatricula(
     session: SessionDep,
     matriculaID: int,
-    cursoID: int = Form(...),
-    estudianteID: int = Form(...)
+    codigo: str = Form(...),
+    cedula: str = Form(...)
     ):
 
     # Verificar que exista la matricula
@@ -99,13 +100,13 @@ async def actualizarMatricula(
         raise HTTPException(404, "La matricula no existe")
 
     # Verificar que no haya otra matricula con los id de estudiante y curso que ingresan
-    existeMatricula = session.exec(select(Matricula).where(Matricula.cursoID == cursoID, Matricula.estudianteID == estudianteID)).first()
+    existeMatricula = session.exec(select(Matricula).where(Matricula.codigo == codigo, Matricula.cedula == cedula)).first()
     if existeMatricula:
         raise HTTPException(400, "Ya existe esa matricula")
     
     # Actualizar los datos de la matricula
-    matriculaDB.cursoID = cursoID
-    matriculaDB.estudianteID = estudianteID
+    matriculaDB.codigo = codigo
+    matriculaDB.cedula = cedula
 
     # Insertar la matricula actualizada en la DB
     session.add(matriculaDB)
@@ -117,10 +118,10 @@ async def actualizarMatricula(
 
 
 # PATCH - Volver a matricular a un estudiante en un curso
-@router.patch("/{estudianteID}/rematricular", response_model=Matricula)
-async def rematricularEstudiante(estudianteID: int, cursoID: int, session: SessionDep):
+@router.patch("/{cedula}/rematricular", response_model=Matricula)
+async def rematricularEstudiante(cedula: str, codigo: str, session: SessionDep):
     # Validar si ya existe una matricula
-    matriculaDB = session.exec(select(Matricula).where(Matricula.cursoID == cursoID, Matricula.estudianteID == estudianteID)).first()
+    matriculaDB = session.exec(select(Matricula).where(Matricula.codigo == codigo, Matricula.cedula == cedula)).first()
     # Si no existe la matricula
     if not matriculaDB:
         raise HTTPException(404, "Matricula no encontrada")
@@ -141,10 +142,10 @@ async def rematricularEstudiante(estudianteID: int, cursoID: int, session: Sessi
 
 
 # DELETE - Desmatricular a un estudiante de un curso
-@router.delete("/{estudianteID}/desmatricular", response_model=Matricula)
-async def desmatricularEstudiante(estudianteID: int, cursoID: int, session: SessionDep):
+@router.delete("/{cedula}/desmatricular", response_model=Matricula)
+async def desmatricularEstudiante(cedula: str, codigo: str, session: SessionDep):
     # Validar si ya existe una matricula
-    matriculaDB = session.exec(select(Matricula).where(Matricula.cursoID == cursoID, Matricula.estudianteID == estudianteID)).first()
+    matriculaDB = session.exec(select(Matricula).where(Matricula.codigo == codigo, Matricula.cedula == cedula)).first()
     # Si no existe la matricula
     if not matriculaDB:
         raise HTTPException(404, "Matricula no encontrada")

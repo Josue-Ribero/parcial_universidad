@@ -63,12 +63,12 @@ async def estudiantesPorSemestre(semestre: Semestre, session: SessionDep):
 
 
 # READ - Cursos de un estudiante
-@router.get("/{estudianteID}/mis-cursos", response_model=list[Curso])
-async def misCursos(estudianteID: int, session: SessionDep):
+@router.get("/{cedula}/mis-cursos", response_model=list[Curso])
+async def misCursos(cedula: str, session: SessionDep):
     listaMisCursos = session.exec(
         select(Curso)
-            .join(Matricula, Matricula.cursoID == Curso.id)
-            .where(Matricula.estudianteID == estudianteID, Matricula.matriculado == EstadoMatricula.MATRICULADO)
+            .join(Matricula, Matricula.codigo == Curso.codigo)
+            .where(Matricula.cedula == cedula, Matricula.matriculado == EstadoMatricula.MATRICULADO)
         ).all()
     # Si el estudiante no tiene cursos
     if len(listaMisCursos) == 0:
@@ -99,24 +99,24 @@ async def actualizarJornadaCurso(session: SessionDep, cedula: str, semestre: Sem
 
 
 # DELETE - Eliminar un estudiante
-@router.delete("/{estudianteID}/eliminar")
-async def eliminarEstudiante(estudianteID: int, session: SessionDep):
+@router.delete("/{cedula}/eliminar")
+async def eliminarEstudiante(cedula: str, session: SessionDep):
     # Validar si ya existe el estudiante
-    estudianteDB = session.exec(select(Estudiante).where(Estudiante.id == estudianteID)).first()
+    estudianteDB = session.exec(select(Estudiante).where(Estudiante.cedula == cedula)).first()
     # Si no existe la matricula
     if not estudianteDB:
         raise HTTPException(404, "Estudiante no encontrado")
     
     # Guardar matrículas relacionadas en el histórico antes de borrar
-    matriculasDB = session.exec(select(Matricula).where(Matricula.estudianteID == estudianteID)).all()
+    matriculasDB = session.exec(select(Matricula).where(Matricula.cedula == cedula)).all()
     for matricula in matriculasDB:
         matriculaHistorica = MatriculaHistorica(
-            cursoID=matricula.cursoID,
-            estudianteID=matricula.estudianteID,
+            codigo=matricula.codigo,
+            cedula=matricula.cedula,
             matriculado=matricula.matriculado,
             razonEliminado="Estudiante eliminado"
         )
-        # Insertar las matriculas del estudiante al historico
+        # Insertar las matriculas del curso al historico
         session.add(matriculaHistorica)
     session.commit() # Guardar los cambios
     
