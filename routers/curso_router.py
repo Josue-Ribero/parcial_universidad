@@ -75,7 +75,7 @@ async def cursosPorCodigo(codigo: str, session: SessionDep):
 
 # READ - Obtener el curso filtrado por nombre
 @router.get("/nombre/{nombre}", response_model=Curso)
-async def cursosPorCodigo(nombre: str, session: SessionDep):
+async def cursosPorNombre(nombre: str, session: SessionDep):
     # Convertir el nombre a mayuscula y colocar espacios
     nombre = nombre.replace("%20", " ").upper()
 
