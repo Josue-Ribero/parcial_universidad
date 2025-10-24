@@ -22,6 +22,9 @@ async def crearEstudiante(
     if estudianteDB:
         raise HTTPException(400, "Ya hay un estudiante registrado con esa CC")
     
+    # Convertir el nombre a mayusculas
+    nombre = nombre.upper()
+
     # Si no existe, lo crea
     nuevoEstudiante = Estudiante(
         cedula=cedula,
@@ -59,6 +62,34 @@ async def estudiantesPorSemestre(semestre: Semestre, session: SessionDep):
         raise HTTPException(404, "No hay estudiantes en ese semestre")
     
     return listaEstudiantes
+
+
+
+# READ - Obtener un estudiante filtrado por semestre y email
+@router.get("/{semestre}/{email}", response_model=Estudiante)
+async def estudiantesPorSemestre(semestre: Semestre, email: str, session: SessionDep):
+    estudianteDB = session.exec(select(Estudiante).where(Estudiante.semestre == semestre, Estudiante.email == email)).first()
+    # Si no existe un estudiante con ese email
+    if not estudianteDB:
+        raise HTTPException(404, f"Estudiante con email {email} no esta en el semestre {semestre}")
+    
+    return estudianteDB
+
+
+
+# READ - Cursos de un estudiante
+@router.get("/{cedula}/mis-cursos", response_model=list[Curso])
+async def misCursos(cedula: str, session: SessionDep):
+    listaMisCursos = session.exec(
+        select(Curso)
+            .join(Matricula, Matricula.codigo == Curso.codigo)
+            .where(Matricula.cedula == cedula, Matricula.matriculado == EstadoMatricula.MATRICULADO)
+        ).all()
+    # Si el estudiante no tiene cursos
+    if len(listaMisCursos) == 0:
+        raise HTTPException(404, "No tienes cursos")
+    
+    return listaMisCursos
 
 
 
