@@ -47,3 +47,11 @@ async def listaMatriculas(session: SessionDep):
 async def cursosDeEstudiante(estudianteID: int, session: SessionDep):
     matriculaDB = session.exec(select(Matricula).where(Matricula.estudianteID == estudianteID)).all()
     return matriculaDB
+
+
+
+# READ - Obtener un curso y sus estudiantes asociados
+@router.get("/curso/{cursoID}", response_model=list[Matricula])
+async def estudiantesEnCurso(cursoID: int, session: SessionDep):
+    matriculaDB = session.exec(select(Matricula).where(Matricula.cursoID == cursoID, Matricula.matriculado == True)).all()
+    return matriculaDB
