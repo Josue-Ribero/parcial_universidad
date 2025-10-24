@@ -21,6 +21,14 @@ class MatriculaUpdate(MatriculaBase):
 class MatriculaDelete(MatriculaBase):
     pass
 
+class MatriculaHistorica(SQLModel, table=True):
+    id: int = Field(primary_key=True)
+    cursoID: int
+    estudianteID: int
+    matriculado: EstadoMatricula
+    fechaEliminado: dt = Field(default_factory=dt.now)
+    razonEliminado: Optional[str] = None
+
 # Importaciones diferidas
 from .curso import Curso
 from .estudiante import Estudiante

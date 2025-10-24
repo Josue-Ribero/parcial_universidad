@@ -1,4 +1,5 @@
 from sqlmodel import SQLModel, Field, Relationship
+from datetime import datetime as dt
 from typing import Optional
 from ..utils.enum import Semestre
 
@@ -18,6 +19,14 @@ class EstudianteUpdate(EstudianteBase):
 
 class EstudianteDelete(EstudianteBase):
     pass
+
+class EstudianteHistorico(SQLModel, table=True):
+    id: int = Field(primary_key=True)
+    cedula: str
+    nombre: str
+    email: str
+    semestre: Semestre
+    fechaEliminado: dt = Field(default_factory=dt.now)
 
 # Importaciones diferidas
 from .matricula import Matricula

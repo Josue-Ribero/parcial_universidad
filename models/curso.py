@@ -1,4 +1,5 @@
 from sqlmodel import SQLModel, Field, Relationship
+from datetime import datetime as dt
 from typing import Optional
 from ..utils.enum import CreditosCurso, JornadaCurso
 
@@ -18,6 +19,14 @@ class CursoUpdate(CursoBase):
 
 class CursoDelete(CursoBase):
     pass
+
+class CursoHistorico(SQLModel, table=True):
+    id: int = Field(primary_key=True)
+    codigo: str
+    nombre: str
+    creditos: CreditosCurso
+    jornada: JornadaCurso
+    fechaEliminado: dt = Field(default_factory=dt.now)
 
 # Importaciones diferidas
 from .matricula import Matricula
