@@ -22,6 +22,9 @@ async def crearCurso(
     if cursoDB:
         raise HTTPException(400, "Ya hay un curso registrado con ese codigo")
     
+    # Convertir el codigo a mayuscula
+    codigo = codigo.upper()
+
     # Convertir el nombre a mayusculas
     nombre = nombre.upper()
 
@@ -137,6 +140,9 @@ async def cursosPorCreditos(session: SessionDep, horario: HorarioCurso):
 # UPDATE - Actualizar el horario de un curso
 @router.patch("/{codigo}/actualizar", response_model=Curso)
 async def actualizarHorarioCurso(session: SessionDep, codigo: str, horario: HorarioCurso = Form(...)):
+    # Convertir el codigo a mayuscula
+    codigo = codigo.upper()
+
     # Verificar que el curso exista
     cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).first()
     # Si no existe el curso
@@ -157,6 +163,9 @@ async def actualizarHorarioCurso(session: SessionDep, codigo: str, horario: Hora
 # DELETE - Eliminar un curso
 @router.delete("/{codigo}/eliminar")
 async def eliminarCurso(codigo: str, session: SessionDep):
+    # Convertir el codigo a mayuscula
+    codigo = codigo.upper()
+
     # Validar si ya existe el curso
     cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).first()
     # Si no existe el curso
