@@ -73,6 +73,22 @@ async def cursosPorCodigo(codigo: str, session: SessionDep):
 
 
 
+# READ - Obtener el curso filtrado por nombre
+@router.get("/nombre/{nombre}", response_model=Curso)
+async def cursosPorCodigo(nombre: str, session: SessionDep):
+    # Convertir el nombre a mayuscula y colocar espacios
+    nombre = nombre.replace("%20", " ").upper()
+
+    # Validar si existe el nombre
+    cursoDB = session.exec(select(Curso).where(Curso.nombre == nombre)).first()
+    # Si no existe el curso con ese nombre
+    if not cursoDB:
+        raise HTTPException(404, "No existe ese curso")
+    
+    return cursoDB
+
+
+
 # READ - Obtener lista de cursos filtrados por creditos
 @router.get("/creditos/{creditos}", response_model=list[Curso])
 async def cursosPorCreditos(session: SessionDep, creditos: CreditosCurso):
