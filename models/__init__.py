@@ -1,9 +1,9 @@
-from .curso import Curso, CursoCreate, CursoUpdate, CursoDelete
-from .estudiante import Estudiante, EstudianteCreate, EstudianteUpdate, EstudianteDelete
-from .matricula import Matricula, MatriculaCreate, MatriculaUpdate, MatriculaDelete
+from .curso import Curso, CursoUpdate, CursoDelete
+from .estudiante import Estudiante, EstudianteUpdate, EstudianteDelete
+from .matricula import Matricula, MatriculaUpdate, MatriculaDelete
 
 __all__ = [
-    "Curso", "CursoCreate", "CursoUpdate", "CursoDelete",
-    "Estudiante", "EstudianteCreate", "EstudianteUpdate", "EstudianteDelete",
-    "Matricula", "MatriculaCreate", "MatriculaUpdate", "MatriculaDelete",
+    "Curso", "CursoUpdate", "CursoDelete",
+    "Estudiante", "EstudianteUpdate", "EstudianteDelete",
+    "Matricula", "MatriculaUpdate", "MatriculaDelete",
 ]

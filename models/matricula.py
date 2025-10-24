@@ -15,13 +15,10 @@ class Matricula(MatriculaBase, table=True):
     estudianteID: Optional[int] = Field(foreign_key="estudiante.id", ondelete="CASCADE")
     estudiante: Optional["Estudiante"] = Relationship(back_populates="matriculas")
 
-class MatriculaCreate(MatriculaBase):
+class MatriculaUpdate(MatriculaBase):
     pass
 
-class MatriculaCreate(MatriculaBase):
-    pass
-
-class MatriculaCreate(MatriculaBase):
+class MatriculaDelete(MatriculaBase):
     pass
 
 # Importaciones diferidas

@@ -11,16 +11,12 @@ class EstudianteBase(SQLModel):
 
 class Estudiante(EstudianteBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    matriculaID: Optional[int] = Field(foreign_key="matricula.id")
     matriculas: list["Matricula"] = Relationship(back_populates="estudiante", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
 
-class EstudianteCreate(EstudianteBase):
+class EstudianteUpdate(EstudianteBase):
     pass
 
-class EstudianteCreate(EstudianteBase):
-    pass
-
-class EstudianteCreate(EstudianteBase):
+class EstudianteDelete(EstudianteBase):
     pass
 
 # Importaciones diferidas
