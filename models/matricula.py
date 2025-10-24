@@ -10,7 +10,7 @@ class MatriculaBase(SQLModel):
 
 class Matricula(MatriculaBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    cursoID: Optional[int] = Field(foreign_key="curso.id")
+    cursoID: Optional[int] = Field(foreign_key="curso.id", ondelete="CASCADE")
     curso: Optional["Curso"] = Relationship(back_populates="matriculas")
     estudianteID: Optional[int] = Field(foreign_key="estudiante.id", ondelete="CASCADE")
     estudiante: Optional["Estudiante"] = Relationship(back_populates="matriculas")
