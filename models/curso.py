@@ -1,14 +1,14 @@
 from sqlmodel import SQLModel, Field, Relationship
 from datetime import datetime as dt
 from typing import Optional
-from ..utils.enum import CreditosCurso, JornadaCurso
+from ..utils.enum import CreditosCurso, HorarioCurso
 
 # Modelo base de curso
 class CursoBase(SQLModel):
     codigo: Optional[str] = Field(default=None)
     nombre: Optional[str] = Field(default=None)
     creditos: CreditosCurso = Field(default=CreditosCurso.DOS)
-    jornada: JornadaCurso = Field(default=JornadaCurso.DIURNA)
+    horario: HorarioCurso = Field(default=HorarioCurso.SIETE_A_NUEVE)
 
 class Curso(CursoBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -25,7 +25,7 @@ class CursoHistorico(SQLModel, table=True):
     codigo: str
     nombre: str
     creditos: CreditosCurso
-    jornada: JornadaCurso
+    horario: HorarioCurso
     fechaEliminado: dt = Field(default_factory=dt.now)
 
 # Importaciones diferidas

@@ -4,7 +4,7 @@ from sqlmodel import select
 from ..models.curso import Curso, CursoHistorico
 from ..models.matricula import Matricula, MatriculaHistorica
 from ..models.estudiante import Estudiante
-from ..utils.enum import CreditosCurso, JornadaCurso
+from ..utils.enum import CreditosCurso, HorarioCurso
 
 router = APIRouter(prefix="/curso", tags=["Cursos"])
 
@@ -15,7 +15,7 @@ async def crearCurso(
     codigo: str = Form(...),
     nombre: str = Form(...),
     creditos: CreditosCurso = Form(...),
-    jornada: JornadaCurso = Form(...)
+    horario: HorarioCurso = Form(...)
     ):
     # Validar si el curso ya existe
     cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).first()
@@ -27,7 +27,7 @@ async def crearCurso(
         codigo=codigo,
         nombre=nombre,
         creditos=creditos,
-        jornada=jornada
+        horario=horario
     )
     # Insertar el curso a la DB
     session.add(nuevoCurso)
@@ -86,17 +86,17 @@ async def estudiantesPorCurso(codigo: str, session: SessionDep):
 
 
 
-# UPDATE - Actualizar la jornada de un curso
+# UPDATE - Actualizar el horario de un curso
 @router.patch("/{codigo}/actualizar", response_model=Curso)
-async def actualizarJornadaCurso(session: SessionDep, codigo: str, jornada: JornadaCurso = Form(...)):
+async def actualizarHorarioCurso(session: SessionDep, codigo: str, horario: HorarioCurso = Form(...)):
     # Verificar que el curso exista
     cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).first()
     # Si no existe el curso
     if not cursoDB:
         raise HTTPException(404, "Curso no encontrado")
     
-    # Cambiar la jornada del curso
-    cursoDB.jornada = jornada
+    # Cambiar la horario del curso
+    cursoDB.horario = horario
     #Insertar curso actualizado en la DB
     session.add(cursoDB)
     session.commit() # Guardar los cambios
@@ -133,7 +133,7 @@ async def eliminarCurso(codigo: str, session: SessionDep):
         codigo=cursoDB.codigo,
         nombre=cursoDB.nombre,
         creditos=cursoDB.creditos,
-        jornada=cursoDB.jornada
+        horario=cursoDB.horario
     )
     session.add(cursoHistorico)
     

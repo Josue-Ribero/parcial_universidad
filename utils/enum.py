@@ -11,9 +11,13 @@ class CreditosCurso(Enum):
     CUATRO = "4"
 
 # Horarios cursos
-class JornadaCurso(Enum):
-    DIURNA = "DIURNA"
-    NOCTURNA = "NOCTURNA"
+class HorarioCurso(Enum):
+    SIETE_A_NUEVE = "SIETE_A_NUEVE"
+    NUEVE_A_ONCE = "NUEVE_A_ONCE"
+    ONCE_A_UNA = "ONCE_A_UNA"
+    DOS_A_CUATRO = "DOS_A_CUATRO"
+    CUATRO_A_SEIS = "CUATRO_A_SEIS"
+    SEIS_A_OCHO = "SEIS_A_OCHO"
 
 
 # ENUMERACIONES ESTUDIANTES
