@@ -5,7 +5,7 @@ from ..utils.enum import Semestre
 
 # Modelo base de Estudiante
 class EstudianteBase(SQLModel):
-    cedula: Optional[str] = Field(default=None, unique=True)
+    cedula: Optional[str] = Field(default=None, unique=True, min_length=7, max_length=10)
     nombre: Optional[str] = Field(default=None)
     email: Optional[str] = Field(default=None, unique=True)
     semestre: Semestre = Field(default=Semestre.PRIMERO)

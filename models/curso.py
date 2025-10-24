@@ -5,7 +5,7 @@ from ..utils.enum import CreditosCurso, HorarioCurso
 
 # Modelo base de curso
 class CursoBase(SQLModel):
-    codigo: Optional[str] = Field(default=None)
+    codigo: Optional[str] = Field(default=None, min_length=7, max_length=7)
     nombre: Optional[str] = Field(default=None)
     creditos: CreditosCurso = Field(default=CreditosCurso.DOS)
     horario: HorarioCurso = Field(default=HorarioCurso.SIETE_A_NUEVE)
