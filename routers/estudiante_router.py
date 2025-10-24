@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Form
-from db.db import SessionDep
+from ..db.db import SessionDep
 from sqlmodel import select
 from ..models.estudiante import Estudiante
 from ..models.matricula import Matricula

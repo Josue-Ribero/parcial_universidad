@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Form
-from db.db import SessionDep
+from ..db.db import SessionDep
 from sqlmodel import select
 from ..models.curso import Curso
 from ..models.matricula import Matricula
@@ -48,7 +48,7 @@ async def listaCursos(session: SessionDep):
 
 # READ - Obtener el curso filtrado por codigo
 @router.get("/codigo/{codigo}", response_model=list[Curso])
-async def cursosPorCodigo(codigo: int, session: SessionDep):
+async def cursosPorCodigo(codigo: str, session: SessionDep):
     cursoDB = session.get(Curso, codigo)
     return cursoDB
 

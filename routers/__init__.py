@@ -1,9 +1,9 @@
-from .curso_router import router as router_curso
-from .estudiante_router import router as router_estudiante
-from .matricula_router import router as router_matricula
+from . import curso_router
+from . import estudiante_router
+from . import matricula_router
 
 __all__ = [
-    "router_curso",
-    "router_estudiante",
-    "router_matricula"
+    "curso_router",
+    "estudiante_router",
+    "matricula_router"
 ]

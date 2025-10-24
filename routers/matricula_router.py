@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Form
-from db.db import SessionDep
+from ..db.db import SessionDep
 from sqlmodel import select
 from ..models.matricula import Matricula
 from ..utils.enum import EstadoMatricula
@@ -95,4 +95,10 @@ async def actualizarMatricula(
 async def desmatricularEstudiante(estudianteID: int, session: SessionDep):
     estudianteDB = session.exec(select(Matricula).where(Matricula.estudianteID == estudianteID)).first()
     estudianteDB.matriculado = False
-    return {"mensaje" : "Estudiante desmatriculado exitosamente"}
+    
+    # Insertar el cambio en la DB
+    session.add(estudianteDB)
+    session.commit()
+    session.refresh(estudianteDB)
+
+    return estudianteDB
