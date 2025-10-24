@@ -58,6 +58,38 @@ async def estudiantesEnCurso(cursoID: int, session: SessionDep):
 
 
 
+# UPDATE - Actualizar matricula
+@router.patch("/{matriculaID}/actualizar", response_model=Matricula)
+async def actualizarMatricula(
+    session: SessionDep,
+    matriculaID: int,
+    cursoID: int = Form(...),
+    estudianteID: int = Form(...)
+    ):
+
+    matriculaDB = session.get(Matricula, matriculaID)
+    if not matriculaDB:
+        raise HTTPException(404, "La matricula no existe")
+
+    # Verificar que no haya otra matricula con los id de estudiante y curso que ingresan
+    existeMatricula = session.exec(select(Matricula).where(Matricula.cursoID == cursoID, Matricula.estudianteID == estudianteID)).first()
+    if existeMatricula:
+        raise HTTPException(400, "Ya existe esa matricula")
+    
+    # Actualizar los datos de la matricula
+    matriculaDB.cursoID = cursoID
+    matriculaDB.estudianteID = estudianteID
+
+    # Insertar la matricula actualizada en la DB
+    session.add(matriculaDB)
+    session.commit() # Guardar los cambios
+    session.refresh(matriculaDB)
+
+    return matriculaDB
+
+
+
+
 # DELETE - Desmatricular a un estudiante
 @router.patch("/{estudianteID}/desmatricular", response_model=Matricula)
 async def desmatricularEstudiante(estudianteID: int, session: SessionDep):
