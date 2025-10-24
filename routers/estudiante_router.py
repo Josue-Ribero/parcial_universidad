@@ -69,9 +69,25 @@ async def estudiantesPorSemestre(semestre: Semestre, session: SessionDep):
 
 
 
+# READ - Obtener el curso filtrado por nombre
+@router.get("/nombre/{nombre}", response_model=Estudiante)
+async def estudiantesPorNombre(nombre: str, session: SessionDep):
+    # Convertir el nombre a mayuscula y colocar espacios
+    nombre = nombre.replace("%20", " ").upper()
+
+    # Validar si existe el nombre
+    estudianteDB = session.exec(select(Estudiante).where(Estudiante.nombre == nombre)).first()
+    # Si no existe el curso con ese nombre
+    if not estudianteDB:
+        raise HTTPException(404, "No existe ese estudiante")
+    
+    return estudianteDB
+
+
+
 # READ - Obtener un estudiante filtrado por semestre y email
 @router.get("/{semestre}/{email}", response_model=Estudiante)
-async def estudiantesPorSemestre(semestre: Semestre, email: str, session: SessionDep):
+async def estudiantesPorSemestreYemail(semestre: Semestre, email: str, session: SessionDep):
     estudianteDB = session.exec(select(Estudiante).where(Estudiante.semestre == semestre or Estudiante.email == email)).first()
     # Si no existe un estudiante con ese email
     if not estudianteDB:
@@ -81,22 +97,6 @@ async def estudiantesPorSemestre(semestre: Semestre, email: str, session: Sessio
         raise HTTPException(404, f"Estudiante con email {email} no esta en el semestre {semestre.value}")
     
     return estudianteDB
-
-
-
-# READ - Cursos de un estudiante
-@router.get("/{cedula}/mis-cursos", response_model=list[Curso])
-async def misCursos(cedula: str, session: SessionDep):
-    listaMisCursos = session.exec(
-        select(Curso)
-            .join(Matricula, Matricula.codigo == Curso.codigo)
-            .where(Matricula.cedula == cedula, Matricula.matriculado == EstadoMatricula.MATRICULADO)
-        ).all()
-    # Si el estudiante no tiene cursos
-    if len(listaMisCursos) == 0:
-        raise HTTPException(404, "No tienes cursos")
-    
-    return listaMisCursos
 
 
 
