@@ -49,7 +49,8 @@ async def listaEstudiantes(session: SessionDep):
 # READ - Obtener lista de estudiantes filtrados por semestre
 @router.get("/semestre/{semestre}", response_model=list[Estudiante])
 async def estudiantesPorSemestre(semestre: int, session: SessionDep):
-    listaEstudiantes = session.exec(select(Estudiante).where(Estudiante.semestre == semestre)).all()
+    semestreEnum = Semestre(str(semestre))
+    listaEstudiantes = session.exec(select(Estudiante).where(Estudiante.semestre == semestreEnum)).all()
     return listaEstudiantes
 
 
@@ -58,4 +59,6 @@ async def estudiantesPorSemestre(semestre: int, session: SessionDep):
 @router.get("/{estudianteID}/mis-cursos", response_model=list[Curso])
 async def misCursos(estudianteID: int, session: SessionDep):
     listaMisCursos = session.exec(select(Curso).join(Matricula, Matricula.cursoID == Curso.id).where(Matricula.estudianteID == estudianteID)).all()
+    if len(listaMisCursos) == 0:
+        raise HTTPException(404, "No tienes cursos")
     return listaMisCursos
