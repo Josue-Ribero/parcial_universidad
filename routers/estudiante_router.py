@@ -42,6 +42,10 @@ async def crearEstudiante(
 @router.get("/todos", response_model=list[Estudiante])
 async def listaEstudiantes(session: SessionDep):
     listaEstudiantes = session.exec(select(Estudiante)).all()
+    # Si no hay estudiantes
+    if len(listaEstudiantes) == 0:
+        raise HTTPException(404, "No hay estudiantes")
+    
     return listaEstudiantes
 
 
@@ -50,8 +54,10 @@ async def listaEstudiantes(session: SessionDep):
 @router.get("/semestre/{semestre}", response_model=list[Estudiante])
 async def estudiantesPorSemestre(semestre: Semestre, session: SessionDep):
     listaEstudiantes = session.exec(select(Estudiante).where(Estudiante.semestre == semestre)).all()
+    # Si no hay estudiantes en ese semestre
     if len(listaEstudiantes) == 0:
         raise HTTPException(404, "No hay estudiantes en ese semestre")
+    
     return listaEstudiantes
 
 
@@ -60,8 +66,10 @@ async def estudiantesPorSemestre(semestre: Semestre, session: SessionDep):
 @router.get("/{estudianteID}/mis-cursos", response_model=list[Curso])
 async def misCursos(estudianteID: int, session: SessionDep):
     listaMisCursos = session.exec(select(Curso).join(Matricula, Matricula.cursoID == Curso.id).where(Matricula.estudianteID == estudianteID)).all()
+    # Si el estudiante no tiene cursos
     if len(listaMisCursos) == 0:
         raise HTTPException(404, "No tienes cursos")
+    
     return listaMisCursos
 
 

@@ -42,6 +42,10 @@ async def crearCurso(
 @router.get("/todos", response_model=list[Curso])
 async def listaCursos(session: SessionDep):
     listaCursos = session.exec(select(Curso)).all()
+    # Si no hay cursos
+    if len(listaCursos) == 0:
+        raise HTTPException(404, "No hay cursos")
+    
     return listaCursos
 
 
@@ -50,6 +54,10 @@ async def listaCursos(session: SessionDep):
 @router.get("/codigo/{codigo}", response_model=Curso)
 async def cursosPorCodigo(codigo: str, session: SessionDep):
     cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).first()
+    # Si no existe el curso con ese codigo
+    if not cursoDB:
+        raise HTTPException(404, "No existe ese curso")
+    
     return cursoDB
 
 
@@ -58,6 +66,7 @@ async def cursosPorCodigo(codigo: str, session: SessionDep):
 @router.get("/creditos/{creditos}", response_model=list[Curso])
 async def cursosPorCreditos(session: SessionDep, creditos: CreditosCurso):
     listaCursos = session.exec(select(Curso).where(Curso.creditos == creditos)).all()
+    # Si no hay cursos con esos creditos
     if len(listaCursos) == 0:
         raise HTTPException(404, "No hay cursos con esa cantidad de creditos")
     
@@ -69,8 +78,10 @@ async def cursosPorCreditos(session: SessionDep, creditos: CreditosCurso):
 @router.get("/{cursoID}/estudiantes", response_model=list[Estudiante])
 async def estudiantesPorCurso(cursoID: int, session: SessionDep):
     estudiantesEnCurso = session.exec(select(Estudiante).join(Matricula, Matricula.estudianteID == Estudiante.id).where(Matricula.cursoID == cursoID)).all()
+    # Si no hay estudiantes en ese curso
     if len(estudiantesEnCurso) == 0:
-        raise HTTPException(404, "No hay estudiantes")
+        raise HTTPException(404, "No hay estudiantes en ese curso")
+    
     return estudiantesEnCurso
 
 
