@@ -10,9 +10,9 @@ class MatriculaBase(SQLModel):
 
 class Matricula(MatriculaBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    cursoID: Optional[int] = Field(foreign_key="curso.id", ondelete="CASCADE")
+    codigo: Optional[str] = Field(foreign_key="curso.codigo", ondelete="CASCADE")
     curso: Optional["Curso"] = Relationship(back_populates="matriculas")
-    estudianteID: Optional[int] = Field(foreign_key="estudiante.id", ondelete="CASCADE")
+    cedula: Optional[str] = Field(foreign_key="estudiante.cedula", ondelete="CASCADE")
     estudiante: Optional["Estudiante"] = Relationship(back_populates="matriculas")
 
 class MatriculaUpdate(MatriculaBase):
@@ -23,8 +23,8 @@ class MatriculaDelete(MatriculaBase):
 
 class MatriculaHistorica(SQLModel, table=True):
     id: int = Field(primary_key=True)
-    cursoID: int
-    estudianteID: int
+    codigo: str
+    cedula: str
     matriculado: EstadoMatricula
     fechaEliminado: dt = Field(default_factory=dt.now)
     razonEliminado: Optional[str] = None
