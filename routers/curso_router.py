@@ -91,7 +91,6 @@ async def cursosPorNombre(nombre: str, session: SessionDep):
     return cursoDB
 
 
-
 # READ - Obtener lista de cursos filtrados por creditos
 @router.get("/creditos/{creditos}", response_model=list[Curso])
 async def cursosPorCreditos(session: SessionDep, creditos: CreditosCurso):
@@ -101,6 +100,24 @@ async def cursosPorCreditos(session: SessionDep, creditos: CreditosCurso):
         raise HTTPException(404, "No hay cursos con esa cantidad de creditos")
     
     return listaCursos
+
+
+
+# READ - Obtener un curso filtrado por creditos y codigo
+@router.get("/{creditos}/{codigo}", response_model=Curso)
+async def cursoPorCreditosYcodigo(creditos: CreditosCurso, codigo: str, session: SessionDep):
+    # Convertir el codigo a mayuscula
+    codigo = codigo.upper()
+
+    cursoDB = session.exec(select(Curso).where(Curso.creditos == creditos or Curso.codigo == codigo)).first()
+    # Si no existe un estudiante con ese email
+    if not cursoDB:
+        raise HTTPException(404, f"Curso no encontrado")
+    # Si el estudiante no esta en el semestre ingresado
+    if cursoDB.creditos != creditos:
+        raise HTTPException(404, f"Curso con codigo {codigo} no tiene {creditos.value} creditos")
+    
+    return cursoDB
 
 
 
