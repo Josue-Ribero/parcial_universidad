@@ -18,7 +18,12 @@ async def matricularEstudiante(
     if MatriculaDB:
         raise HTTPException(400, "El estudiante ya esta matriculado en ese curso")
     
-    # Si no existe, lo crea
+    # Verificar que el estudiante no este matriculado en otro curso
+    matriculado = session.exec(select(Matricula).where(Matricula.estudianteID == estudianteID, Matricula.matriculado == EstadoMatricula.MATRICULADO)).first()
+    if matriculado:
+        raise HTTPException(400, "El estudiante no puede estar registrado en mas de un curso a la vez")
+    
+    # Si no esta matriculado, lo crea
     nuevoMatricula = Matricula(
         cursoID=cursoID,
         estudianteID=estudianteID,
@@ -121,6 +126,9 @@ async def desmatricularEstudiante(estudianteID: int, session: SessionDep):
     estudianteDB = session.exec(select(Matricula).where(Matricula.estudianteID == estudianteID)).first()
     if not estudianteDB:
         raise HTTPException(404, "Estudiante no encontrado")
+    
+    if estudianteDB.matriculado == EstadoMatricula.DESMATRICULADO:
+        raise HTTPException(400, "El estudiante ya habia sido desmatriculado")
     
     estudianteDB.matriculado = EstadoMatricula.DESMATRICULADO
     
