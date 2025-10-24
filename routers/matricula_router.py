@@ -14,27 +14,41 @@ async def matricularEstudiante(
     estudianteID: int = Form(...)
     ):
     # Validar si el matricula ya existe
-    MatriculaDB = session.exec(select(Matricula).where(Matricula.cursoID == cursoID, Matricula.estudianteID == estudianteID)).first()
-    if MatriculaDB:
+    matriculaDB = session.exec(select(Matricula).where(Matricula.cursoID == cursoID, Matricula.estudianteID == estudianteID)).first()
+    # Validar si el estudiante ya esta con estado MATRICULADO en ese curso
+    if matriculaDB and matriculaDB.matriculado == EstadoMatricula.MATRICULADO:
         raise HTTPException(400, "El estudiante ya esta matriculado en ese curso")
     
-    # Verificar que el estudiante no este matriculado en otro curso
-    matriculado = session.exec(select(Matricula).where(Matricula.estudianteID == estudianteID, Matricula.matriculado == EstadoMatricula.MATRICULADO)).first()
-    if matriculado:
+    # Verificar si el estudiante ya esta matriculado en otro curso (esta activo)
+    matriculadoEnOtroCurso = session.exec(select(Matricula).where(
+        Matricula.estudianteID == estudianteID,
+        Matricula.matriculado == EstadoMatricula.MATRICULADO,
+        Matricula.cursoID != cursoID)
+        ).first()
+    # Si ya esta matriculado en otro curso
+    if matriculadoEnOtroCurso:
         raise HTTPException(400, "El estudiante no puede estar registrado en mas de un curso a la vez")
     
+    # Si ya existia pero estaba desmatriculado lo reactiva
+    if matriculaDB and matriculaDB.matriculado == EstadoMatricula.DESMATRICULADO:
+        matriculaDB.matriculado = EstadoMatricula.MATRICULADO
+        session.add(matriculaDB)
+        session.commit()
+        session.refresh(matriculaDB)
+        return matriculaDB
+    
     # Si no esta matriculado, lo crea
-    nuevoMatricula = Matricula(
+    nuevaMatricula = Matricula(
         cursoID=cursoID,
         estudianteID=estudianteID,
         matriculado=EstadoMatricula.MATRICULADO
     )
     # Insertar el matricula a la DB
-    session.add(nuevoMatricula)
+    session.add(nuevaMatricula)
     session.commit() # Guardar los cambios
-    session.refresh(nuevoMatricula)
+    session.refresh(nuevaMatricula)
 
-    return nuevoMatricula # Devuelve el objeto matricula
+    return nuevaMatricula # Devuelve el objeto matricula
 
 
 
@@ -79,6 +93,7 @@ async def actualizarMatricula(
     estudianteID: int = Form(...)
     ):
 
+    # Verificar que exista la matricula
     matriculaDB = session.get(Matricula, matriculaID)
     if not matriculaDB:
         raise HTTPException(404, "La matricula no existe")
@@ -101,40 +116,48 @@ async def actualizarMatricula(
 
 
 
-# PATCH - Volver a matricular a un estudiante
+# PATCH - Volver a matricular a un estudiante en un curso
 @router.patch("/{estudianteID}/rematricular", response_model=Matricula)
-async def rematricularEstudiante(estudianteID: int, session: SessionDep):
-    estudianteDB = session.exec(select(Matricula).where(Matricula.estudianteID == estudianteID)).first()
-    if not estudianteDB:
-        raise HTTPException(404, "Estudiante no encontrado")
+async def rematricularEstudiante(estudianteID: int, cursoID: int, session: SessionDep):
+    # Validar si ya existe una matricula
+    matriculaDB = session.exec(select(Matricula).where(Matricula.cursoID == cursoID, Matricula.estudianteID == estudianteID)).first()
+    # Si no existe la matricula
+    if not matriculaDB:
+        raise HTTPException(404, "Matricula no encontrada")
     
-    estudianteDB.matriculado = EstadoMatricula.MATRICULADO
+    # Validar si el estudiante ya habia sido matriculado en ese curso
+    if matriculaDB.matriculado == EstadoMatricula.MATRICULADO:
+        raise HTTPException(400, "El estudiante ya esta matriculado en ese curso")
     
-    # Insertar el cambio en la DB
-    session.add(estudianteDB)
-    session.commit()
-    session.refresh(estudianteDB)
+    # Rematricular al estudiante si estaba desmatriculado
+    matriculaDB.matriculado = EstadoMatricula.MATRICULADO
+    # Insertar la matricula actualizada a la DB
+    session.add(matriculaDB)
+    session.commit() # Guardar los cambios
+    session.refresh(matriculaDB)
 
-    return estudianteDB
+    return matriculaDB
 
 
 
-
-# DELETE - Desmatricular a un estudiante
+# DELETE - Desmatricular a un estudiante de un curso
 @router.delete("/{estudianteID}/desmatricular", response_model=Matricula)
-async def desmatricularEstudiante(estudianteID: int, session: SessionDep):
-    estudianteDB = session.exec(select(Matricula).where(Matricula.estudianteID == estudianteID)).first()
-    if not estudianteDB:
-        raise HTTPException(404, "Estudiante no encontrado")
+async def desmatricularEstudiante(estudianteID: int, cursoID: int, session: SessionDep):
+    # Validar si ya existe una matricula
+    matriculaDB = session.exec(select(Matricula).where(Matricula.cursoID == cursoID, Matricula.estudianteID == estudianteID)).first()
+    # Si no existe la matricula
+    if not matriculaDB:
+        raise HTTPException(404, "Matricula no encontrada")
     
-    if estudianteDB.matriculado == EstadoMatricula.DESMATRICULADO:
+    # Validar si el estudiante ya habia sido desmatriculado de ese curso
+    if matriculaDB.matriculado == EstadoMatricula.DESMATRICULADO:
         raise HTTPException(400, "El estudiante ya habia sido desmatriculado")
     
-    estudianteDB.matriculado = EstadoMatricula.DESMATRICULADO
-    
-    # Insertar el cambio en la DB
-    session.add(estudianteDB)
-    session.commit()
-    session.refresh(estudianteDB)
+    # Desmatricular al estudiante si no se habia hecho antes
+    matriculaDB.matriculado = EstadoMatricula.DESMATRICULADO
+    # Insertar la matricula actualizada a la DB
+    session.add(matriculaDB)
+    session.commit() # Guardar los cambios
+    session.refresh(matriculaDB)
 
-    return estudianteDB
+    return matriculaDB
