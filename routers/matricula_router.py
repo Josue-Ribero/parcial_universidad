@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Form
 from db.db import SessionDep
 from sqlmodel import select
-from ..models.matricula import Matricula, MatriculaCreate
+from ..models.matricula import Matricula
 from ..utils.enum import EstadoMatricula
 
 router = APIRouter(prefix="/matricula", tags=["Matriculas"])
@@ -31,3 +31,19 @@ async def matricularEstudiante(
     session.refresh(nuevoMatricula)
 
     return nuevoMatricula # Devuelve el objeto matricula
+
+
+
+# READ - Obtener todos los matriculas que hay
+@router.get("/todos", response_model=list[Matricula])
+async def listaMatriculas(session: SessionDep):
+    listaMatriculas = session.exec(select(Matricula)).all()
+    return listaMatriculas
+
+
+
+# READ - Obtener un estudiante y sus cursos
+@router.get("/estudiante/{estudianteID}", response_model=list[Matricula])
+async def cursosDeEstudiante(estudianteID: int, session: SessionDep):
+    matriculaDB = session.exec(select(Matricula).where(Matricula.estudianteID == estudianteID)).all()
+    return matriculaDB
