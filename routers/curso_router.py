@@ -56,9 +56,11 @@ async def cursosPorCodigo(codigo: str, session: SessionDep):
 
 # READ - Obtener lista de cursos filtrados por creditos
 @router.get("/creditos/{creditos}", response_model=list[Curso])
-async def cursosPorCreditos(creditos: int, session: SessionDep):
-    creditosEnum = CreditosCurso(str(creditos))
-    listaCursos = session.exec(select(Curso).where(Curso.creditos == creditosEnum)).all()
+async def cursosPorCreditos(session: SessionDep, creditos: CreditosCurso):
+    listaCursos = session.exec(select(Curso).where(Curso.creditos == creditos)).all()
+    if len(listaCursos) == 0:
+        raise HTTPException(404, "No hay cursos con esa cantidad de creditos")
+    
     return listaCursos
 
 
