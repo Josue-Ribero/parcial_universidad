@@ -49,7 +49,7 @@ async def listaCursos(session: SessionDep):
 # READ - Obtener el curso filtrado por codigo
 @router.get("/codigo/{codigo}", response_model=list[Curso])
 async def cursosPorCodigo(codigo: str, session: SessionDep):
-    cursoDB = session.get(Curso, codigo)
+    cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).all()
     return cursoDB
 
 
@@ -57,7 +57,8 @@ async def cursosPorCodigo(codigo: str, session: SessionDep):
 # READ - Obtener lista de cursos filtrados por creditos
 @router.get("/creditos/{creditos}", response_model=list[Curso])
 async def cursosPorCreditos(creditos: int, session: SessionDep):
-    listaCursos = session.exec(select(Curso)).all()
+    creditosEnum = CreditosCurso(str(creditos))
+    listaCursos = session.exec(select(Curso).where(Curso.creditos == creditosEnum)).all()
     return listaCursos
 
 
@@ -66,4 +67,6 @@ async def cursosPorCreditos(creditos: int, session: SessionDep):
 @router.get("/{cursoID}/estudiantes", response_model=list[Estudiante])
 async def estudiantesPorCurso(cursoID: int, session: SessionDep):
     estudiantesEnCurso = session.exec(select(Estudiante).join(Matricula, Matricula.estudianteID == Estudiante.id).where(Matricula.cursoID == cursoID)).all()
+    if len(estudiantesEnCurso) == 0:
+        raise HTTPException(404, "No hay estudiantes")
     return estudiantesEnCurso
