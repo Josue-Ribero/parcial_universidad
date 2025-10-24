@@ -55,3 +55,12 @@ async def cursosDeEstudiante(estudianteID: int, session: SessionDep):
 async def estudiantesEnCurso(cursoID: int, session: SessionDep):
     matriculaDB = session.exec(select(Matricula).where(Matricula.cursoID == cursoID, Matricula.matriculado == True)).all()
     return matriculaDB
+
+
+
+# DELETE - Desmatricular a un estudiante
+@router.patch("/{estudianteID}/desmatricular", response_model=Matricula)
+async def desmatricularEstudiante(estudianteID: int, session: SessionDep):
+    estudianteDB = session.exec(select(Matricula).where(Matricula.estudianteID == estudianteID)).first()
+    estudianteDB.matriculado = False
+    return {"mensaje" : "Estudiante desmatriculado exitosamente"}
