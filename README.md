@@ -86,25 +86,40 @@ Los *endpoints* se agrupan por entidad y ofrecen las operaciones básicas de ges
 
 El proyecto se organiza lógicamente por responsabilidades:
 
-├── .gitignore # Informacion que no sube al repositorio  
-├── **db/**   
-│ └── db.py # Configuración de la sesión de la base de datos   
-├── documentacion/ # Modelado, mapa de endpoints y requerimientos   
-├── entorno/  
-├── **models/**   
-│ └── curso.py # Modelo Curso y sus derivados (SQLModel)   
-│ ├── estudiante.py # Modelo Estudiante y sus derivados (SQLModel)  
-│ └── matricula.py # Modelo Matrícula y sus derivados (SQLModel)  
-├── **routers/**  
-│ └── curso_router.py # Endpoints para la gestión de Cursos  
-│ ├── estudiante_router.py # Endpoints para la gestión de Estudiantes  
-│ └── matricula_router.py # Endpoints para la gestión de Matrículas  
-├── **utils/**  
-│ └── enum.py # Enumeraciones (CreditosCurso, HorarioCurso, Semestre, EstadoMatricula)  
-├── **main.py** # Archivo principal de la aplicación FastAPI  
-├── **parcial_universidad.sqlite3** # Archivo de la base de datos SQLite  
-└── **requirements.txt** # Frameworks, librerias, modulos necesarios
-
+```
+parcial_universidad/
+│
+├── 📄 main.py                          # Aplicación principal FastAPI
+├── 📄 requirements.txt                  # Dependencias del proyecto
+├── 📄 .gitignore                        # Archivos ignorados por Git
+├── 📄 README.md                         # Este archivo
+│
+├── 📂 db/                               # Capa de datos
+│   └── 📄 db.py                        # Configuración de SQLite y sesiones
+│
+├── 📂 models/                           # Modelos de datos (SQLModel)
+│   ├── 📄 __init__.py
+│   ├── 📄 curso.py                     # Modelo Curso + Histórico
+│   ├── 📄 estudiante.py                # Modelo Estudiante + Histórico
+│   └── 📄 matricula.py                 # Modelo Matrícula + Histórico
+│
+├── 📂 routers/                          # Endpoints de la API
+│   ├── 📄 __init__.py
+│   ├── 📄 curso_router.py              # CRUD de cursos
+│   ├── 📄 estudiante_router.py         # CRUD de estudiantes
+│   └── 📄 matricula_router.py          # CRUD de matrículas
+│
+├── 📂 utils/                            # Utilidades y helpers
+│   ├── 📄 __init__.py
+│   └── 📄 enum.py                      # Enumeraciones del sistema
+│
+├── 📂 documentacion/                    # Documentación del proyecto
+│   ├── 📄 modelado.pdf
+│   ├── 📄 requerimientos.pdf
+│   └── 📄 mapa_endpoints.pdf
+│
+└── 📄 parcial_universidad.sqlite3       # Base de datos SQLite (generada)
+```
 
 ***
 
