@@ -237,6 +237,16 @@ async def rematricularEstudiante(cedula: str, codigo: str, session: SessionDep):
     if not matriculaDB:
         raise HTTPException(404, "Matricula no encontrada")
     
+    # Verificar si el estudiante ya esta matriculado en otro curso (esta activo)
+    matriculadoEnOtroCurso = session.exec(select(Matricula).where(
+        Matricula.cedula == cedula,
+        Matricula.matriculado == EstadoMatricula.MATRICULADO,
+        Matricula.codigo != codigo)
+        ).first()
+    # Si ya esta matriculado en otro curso
+    if matriculadoEnOtroCurso:
+        raise HTTPException(400, "El estudiante no puede estar registrado en mas de un curso a la vez")
+    
     # Validar si el estudiante ya habia sido matriculado en ese curso
     if matriculaDB.matriculado == EstadoMatricula.MATRICULADO:
         raise HTTPException(400, "El estudiante ya esta matriculado en ese curso")
