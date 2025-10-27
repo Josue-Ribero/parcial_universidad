@@ -1,3 +1,12 @@
+"""
+Módulo: estudiante_router
+-------------------------
+Endpoints relacionados con la gestión de estudiantes en el sistema académico.
+
+Permite crear, consultar, actualizar y eliminar estudiantes, así como consultar
+los cursos en los que están matriculados y filtrar por diversos criterios.
+"""
+
 from fastapi import APIRouter, HTTPException, Form
 from ..db.db import SessionDep
 from sqlmodel import select
@@ -18,6 +27,27 @@ async def crearEstudiante(
     email: str = Form(...),
     semestre: Semestre = Form(...)
     ):
+
+    """
+    Crear un nuevo estudiante.
+
+    Valida que la cédula sea numérica y única, y que tenga entre 7 y 10 dígitos.
+    Convierte el nombre a mayúsculas y el email a minúsculas.
+
+    Args:
+        session (SessionDep): Sesión de base de datos.
+        cedula (str): Cédula del estudiante.
+        nombre (str): Nombre completo del estudiante.
+        email (str): Email del estudiante.
+        semestre (Semestre): Semestre académico actual.
+
+    Returns:
+        Estudiante: El estudiante creado.
+
+    Raises:
+        HTTPException: 400 si la cédula ya existe o no es válida.
+    """
+
     # Validar si el estudiante ya existe
     estudianteDB = session.exec(select(Estudiante).where(Estudiante.cedula == cedula)).first()
     if estudianteDB:
@@ -56,6 +86,20 @@ async def crearEstudiante(
 # READ - Obtener todos los estudiantes que hay
 @router.get("/todos", response_model=list[Estudiante])
 async def listaEstudiantes(session: SessionDep):
+
+    """
+    Obtener todos los estudiantes registrados.
+
+    Args:
+        session (SessionDep): Sesión de base de datos.
+
+    Returns:
+        list[Estudiante]: Lista de todos los estudiantes.
+
+    Raises:
+        HTTPException: 404 si no hay estudiantes.
+    """
+
     listaEstudiantes = session.exec(select(Estudiante)).all()
     # Si no hay estudiantes
     if len(listaEstudiantes) == 0:
@@ -67,6 +111,21 @@ async def listaEstudiantes(session: SessionDep):
 # READ - Obtener el estudiante filtrado por cedula
 @router.get("/cedula/{cedula}", response_model=Estudiante)
 async def estudiantePorCedula(cedula: str, session: SessionDep):
+
+    """
+    Obtener un estudiante por su cédula.
+
+    Args:
+        cedula (str): Cédula del estudiante.
+        session (SessionDep): Sesión de base de datos.
+
+    Returns:
+        Estudiante: El estudiante encontrado.
+
+    Raises:
+        HTTPException: 400 si la cédula no es numérica, 404 si no existe.
+    """
+
     # Validar que la cedula sea numerica
     if not cedula.isdigit():
         raise HTTPException(400, "La cedula debe ser numerica")
@@ -84,6 +143,21 @@ async def estudiantePorCedula(cedula: str, session: SessionDep):
 # READ - Obtener el estudiante filtrado por email
 @router.get("/email/{email}", response_model=Estudiante)
 async def estudiantePorCedula(email: str, session: SessionDep):
+
+    """
+    Obtener un estudiante por su email.
+
+    Args:
+        email (str): Email del estudiante.
+        session (SessionDep): Sesión de base de datos.
+
+    Returns:
+        Estudiante: El estudiante encontrado.
+
+    Raises:
+        HTTPException: 404 si no existe.
+    """
+
     # Convertir el nombre a mayusculas
     email = email.lower()
 
@@ -100,6 +174,21 @@ async def estudiantePorCedula(email: str, session: SessionDep):
 # READ - Obtener lista de estudiantes filtrados por semestre
 @router.get("/semestre/{semestre}", response_model=list[Estudiante])
 async def estudiantesPorSemestre(semestre: Semestre, session: SessionDep):
+
+    """
+    Obtener estudiantes filtrados por semestre.
+
+    Args:
+        semestre (Semestre): Semestre académico.
+        session (SessionDep): Sesión de base de datos.
+
+    Returns:
+        list[Estudiante]: Estudiantes en el semestre indicado.
+
+    Raises:
+        HTTPException: 404 si no hay estudiantes en ese semestre.
+    """
+
     listaEstudiantes = session.exec(select(Estudiante).where(Estudiante.semestre == semestre)).all()
     # Si no hay estudiantes en ese semestre
     if len(listaEstudiantes) == 0:
@@ -112,6 +201,21 @@ async def estudiantesPorSemestre(semestre: Semestre, session: SessionDep):
 # READ - Obtener el curso filtrado por nombre
 @router.get("/nombre/{nombre}", response_model=Estudiante)
 async def estudiantesPorNombre(nombre: str, session: SessionDep):
+
+    """
+    Obtener un estudiante por su nombre exacto.
+
+    Args:
+        nombre (str): Nombre del estudiante (puede venir con %20 como espacios).
+        session (SessionDep): Sesión de base de datos.
+
+    Returns:
+        Estudiante: El estudiante encontrado.
+
+    Raises:
+        HTTPException: 404 si no existe.
+    """
+
     # Convertir el nombre a mayuscula y colocar espacios
     nombre = nombre.replace("%20", " ").upper()
 
@@ -128,6 +232,21 @@ async def estudiantesPorNombre(nombre: str, session: SessionDep):
 # READ - Cursos de un estudiante
 @router.get("/{cedula}/mis-cursos", response_model=list[Curso])
 async def misCursos(cedula: str, session: SessionDep):
+
+    """
+    Obtener todos los cursos en los que está matriculado un estudiante.
+
+    Args:
+        cedula (str): Cédula del estudiante.
+        session (SessionDep): Sesión de base de datos.
+
+    Returns:
+        list[Curso]: Cursos matriculados por el estudiante.
+
+    Raises:
+        HTTPException: 400 si la cédula no es válida, 404 si no tiene cursos.
+    """
+
     # Validar que la cedula sea numerica
     if not cedula.isdigit():
         raise HTTPException(400, "La cedula debe ser numerica")
@@ -153,6 +272,22 @@ async def misCursos(cedula: str, session: SessionDep):
 # READ - Obtener un estudiante filtrado por semestre y email
 @router.get("/{semestre}/{email}", response_model=Estudiante)
 async def estudiantePorSemestreYemail(semestre: Semestre, email: str, session: SessionDep):
+
+    """
+    Obtener un estudiante por semestre y email.
+
+    Args:
+        semestre (Semestre): Semestre académico.
+        email (str): Email del estudiante.
+        session (SessionDep): Sesión de base de datos.
+
+    Returns:
+        Estudiante: El estudiante encontrado.
+
+    Raises:
+        HTTPException: 404 si no se encuentra o no coincide el semestre.
+    """
+
     # Convertir el nombre a mayusculas
     email = email.lower()
 
@@ -171,6 +306,22 @@ async def estudiantePorSemestreYemail(semestre: Semestre, email: str, session: S
 # UPDATE - Actualizar el semestre de un estudiante
 @router.patch("/{cedula}/actualizar", response_model=Estudiante)
 async def actualizarJornadaCurso(session: SessionDep, cedula: str, semestre: Semestre = Form(...)):
+
+    """
+    Actualizar el semestre de un estudiante.
+
+    Args:
+        session (SessionDep): Sesión de base de datos.
+        cedula (str): Cédula del estudiante.
+        semestre (Semestre): Nuevo semestre a asignar.
+
+    Returns:
+        Estudiante: Estudiante con el semestre actualizado.
+
+    Raises:
+        HTTPException: 400 si la cédula no es válida, 404 si no existe.
+    """
+
     # Validar que la cedula sea numerica
     if not cedula.isdigit():
         raise HTTPException(400, "La cedula debe ser numerica")
@@ -195,6 +346,23 @@ async def actualizarJornadaCurso(session: SessionDep, cedula: str, semestre: Sem
 # DELETE - Eliminar un estudiante
 @router.delete("/{cedula}/eliminar")
 async def eliminarEstudiante(cedula: str, session: SessionDep):
+
+    """
+    Eliminar un estudiante y mover su información al histórico.
+
+    También guarda en el histórico las matrículas asociadas con razón de eliminación.
+
+    Args:
+        cedula (str): Cédula del estudiante a eliminar.
+        session (SessionDep): Sesión de base de datos.
+
+    Returns:
+        dict: Mensaje de confirmación.
+
+    Raises:
+        HTTPException: 400 si la cédula no es válida, 404 si no existe.
+    """
+
     # Validar que la cedula sea numerica
     if not cedula.isdigit():
         raise HTTPException(400, "La cedula debe ser numerica")
