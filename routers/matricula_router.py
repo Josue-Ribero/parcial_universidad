@@ -1,3 +1,12 @@
+"""
+Módulo: matricula_router
+------------------------
+Endpoints relacionados con la gestión de matrículas en el sistema académico.
+
+Incluye operaciones para matricular, desmatricular, finalizar cursos, rematricular
+y consultar las matrículas activas por estudiante o curso.
+"""
+
 from fastapi import APIRouter, HTTPException, Form
 from ..db.db import SessionDep
 from sqlmodel import select
@@ -14,6 +23,24 @@ async def matricularEstudiante(
     codigo: str = Form(...),
     cedula: str = Form(...)
     ):
+
+    """
+    Matricular a un estudiante en un curso.
+
+    Valida que el estudiante no esté ya matriculado en otro curso activo,
+    y que no esté matriculado en el mismo curso con estado MATRICULADO.
+
+    Args:
+        session (SessionDep): Sesión de base de datos.
+        codigo (str): Código del curso.
+        cedula (str): Cédula del estudiante.
+
+    Returns:
+        Matricula: La matrícula creada o reactivada.
+
+    Raises:
+        HTTPException: 400 si hay conflictos de matrícula.
+    """
 
     # Convertir el codigo a mayuscula
     codigo = codigo.upper()
@@ -68,6 +95,17 @@ async def matricularEstudiante(
 # READ - Obtener todos los matriculas que hay
 @router.get("/todos", response_model=list[Matricula])
 async def listaMatriculas(session: SessionDep):
+
+    """
+    Obtener todas las matrículas activas (estado MATRICULADO).
+
+    Args:
+        session (SessionDep): Sesión de base de datos.
+
+    Returns:
+        list[Matricula]: Matrículas activas.
+    """
+
     listaMatriculas = session.exec(select(Matricula).where(Matricula.matriculado == EstadoMatricula.MATRICULADO)).all()
     return listaMatriculas
 
@@ -76,6 +114,21 @@ async def listaMatriculas(session: SessionDep):
 # READ - Obtener un estudiante y sus cursos
 @router.get("/estudiante/{cedula}", response_model=list[Matricula])
 async def cursosDeEstudiante(cedula: str, session: SessionDep):
+
+    """
+    Obtener todas las matrículas de un estudiante.
+
+    Args:
+        cedula (str): Cédula del estudiante.
+        session (SessionDep): Sesión de base de datos.
+
+    Returns:
+        list[Matricula]: Matrículas del estudiante.
+
+    Raises:
+        HTTPException: 400 si la cédula no es válida, 404 si no tiene matrículas.
+    """
+
     # Validar que la cedula sea numerica
     if not cedula.isdigit():
         raise HTTPException(400, "La cedula debe ser numerica")
@@ -101,6 +154,21 @@ async def cursosDeEstudiante(cedula: str, session: SessionDep):
 # READ - Obtener un curso y sus estudiantes asociados
 @router.get("/curso/{codigo}", response_model=list[Matricula])
 async def estudiantesEnCurso(codigo: str, session: SessionDep):
+
+    """
+    Obtener todas las matrículas activas de un curso.
+
+    Args:
+        codigo (str): Código del curso.
+        session (SessionDep): Sesión de base de datos.
+
+    Returns:
+        list[Matricula]: Matrículas activas del curso.
+
+    Raises:
+        HTTPException: 404 si no hay estudiantes matriculados.
+    """
+
     # Convertir el codigo a mayuscula
     codigo = codigo.upper()
 
@@ -119,6 +187,24 @@ async def actualizarMatricula(
     codigo: str = Form(...),
     cedula: str = Form(...)
     ):
+
+    """
+    Actualizar los datos de una matrícula.
+
+    No permite modificar matrículas finalizadas.
+
+    Args:
+        session (SessionDep): Sesión de base de datos.
+        matriculaID (int): ID de la matrícula a actualizar.
+        codigo (str): Nuevo código del curso.
+        cedula (str): Nueva cédula del estudiante.
+
+    Returns:
+        Matricula: Matrícula actualizada.
+
+    Raises:
+        HTTPException: 400 si ya existe o 404 si no se encuentra o está finalizada.
+    """
 
     # Convertir el codigo a mayuscula
     codigo = codigo.upper()
@@ -168,6 +254,24 @@ async def actualizarMatricula(
 # PATCH - Finalizacion de un curso por parte de un estudiante
 @router.patch("/{cedula}/finalizar", response_model=Matricula)
 async def finalizarCurso(cedula: str, codigo: str, session: SessionDep):
+
+    """
+    Finalizar un curso por parte de un estudiante.
+
+    Cambia el estado de la matrícula a FINALIZADO.
+
+    Args:
+        cedula (str): Cédula del estudiante.
+        codigo (str): Código del curso.
+        session (SessionDep): Sesión de base de datos.
+
+    Returns:
+        Matricula: Matrícula finalizada.
+
+    Raises:
+        HTTPException: 400 o 404 si no se encuentra o no está activa.
+    """
+
     # Convertir el codigo a mayuscula
     codigo = codigo.upper()
 
@@ -214,6 +318,24 @@ async def finalizarCurso(cedula: str, codigo: str, session: SessionDep):
 # PATCH - Volver a matricular a un estudiante en un curso
 @router.patch("/{cedula}/rematricular", response_model=Matricula)
 async def rematricularEstudiante(cedula: str, codigo: str, session: SessionDep):
+
+    """
+    Rematricular a un estudiante en un curso previamente desmatriculado.
+
+    Valida que no esté activo en otro curso ni haya finalizado el mismo.
+
+    Args:
+        cedula (str): Cédula del estudiante.
+        codigo (str): Código del curso.
+        session (SessionDep): Sesión de base de datos.
+
+    Returns:
+        Matricula: Matrícula reactivada.
+
+    Raises:
+        HTTPException: 400 si hay conflictos de estado.
+    """
+
     # Convertir el codigo a mayuscula
     codigo = codigo.upper()
 
@@ -269,6 +391,24 @@ async def rematricularEstudiante(cedula: str, codigo: str, session: SessionDep):
 # DELETE - Desmatricular a un estudiante de un curso
 @router.delete("/{cedula}/desmatricular", response_model=Matricula)
 async def desmatricularEstudiante(cedula: str, codigo: str, session: SessionDep):
+
+    """
+    Desmatricular a un estudiante de un curso.
+
+    Cambia el estado de la matrícula a DESMATRICULADO.
+
+    Args:
+        cedula (str): Cédula del estudiante.
+        codigo (str): Código del curso.
+        session (SessionDep): Sesión de base de datos.
+
+    Returns:
+        Matricula: Matrícula desmatriculada.
+
+    Raises:
+        HTTPException: 400 o 404 si no se encuentra o no está activa.
+    """
+
     # Convertir el codigo a mayuscula
     codigo = codigo.upper()
 
