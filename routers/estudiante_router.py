@@ -65,7 +65,7 @@ async def listaEstudiantes(session: SessionDep):
 
 
 # READ - Obtener el estudiante filtrado por cedula
-@router.get("/cedula/{cedula}", response_model=Curso)
+@router.get("/cedula/{cedula}", response_model=Estudiante)
 async def estudiantePorCedula(cedula: str, session: SessionDep):
     # Validar que la cedula sea numerica
     if not cedula.isdigit():
