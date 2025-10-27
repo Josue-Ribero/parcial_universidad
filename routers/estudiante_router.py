@@ -153,6 +153,9 @@ async def misCursos(cedula: str, session: SessionDep):
 # READ - Obtener un estudiante filtrado por semestre y email
 @router.get("/{semestre}/{email}", response_model=Estudiante)
 async def estudiantePorSemestreYemail(semestre: Semestre, email: str, session: SessionDep):
+    # Convertir el nombre a mayusculas
+    email = email.lower()
+
     estudianteDB = session.exec(select(Estudiante).where(Estudiante.semestre == semestre or Estudiante.email == email)).first()
     # Si no existe un estudiante con ese email
     if not estudianteDB:
