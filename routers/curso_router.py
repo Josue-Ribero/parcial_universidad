@@ -317,6 +317,10 @@ async def actualizarHorarioCurso(session: SessionDep, codigo: str, horario: Hora
     if not cursoDB:
         raise HTTPException(404, "Curso no encontrado")
     
+    # Validar si el curso ya esta en esa franja horaria
+    if cursoDB.horario == horario:
+        raise HTTPException(400, "El curso ya se encuentra en esa franja horaria")
+    
     # Cambiar la horario del curso
     cursoDB.horario = horario
     #Insertar curso actualizado en la DB
