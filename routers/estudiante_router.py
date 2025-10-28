@@ -165,6 +165,10 @@ async def estudiantePorCedula(email: str, session: SessionDep):
     # Convertir el nombre a mayusculas
     email = email.lower()
 
+    # Validar que el correo sea @ucatolica.edu.co
+    if "@ucatolica.edu.co" not in email:
+        raise HTTPException(400, "El email debe tener dominio ucatolica.edu.co")
+
     # Validar si existe el codigo
     estudianteDB = session.exec(select(Estudiante).where(Estudiante.email == email)).first()
     # Si no existe el curso con ese codigo
@@ -294,6 +298,10 @@ async def estudiantePorSemestreYemail(semestre: Semestre, email: str, session: S
 
     # Convertir el nombre a mayusculas
     email = email.lower()
+
+    # Validar que el correo sea @ucatolica.edu.co
+    if "@ucatolica.edu.co" not in email:
+        raise HTTPException(400, "El email debe tener dominio ucatolica.edu.co")
 
     estudianteDB = session.exec(select(Estudiante).where(Estudiante.semestre == semestre or Estudiante.email == email)).first()
     # Si no existe un estudiante con ese email
