@@ -59,6 +59,10 @@ async def crearEstudiante(
     # Convertir el nombre a mayusculas
     email = email.lower()
 
+    # Validar que el correo sea @ucatolica.edu.co
+    if "@ucatolica.edu.co" not in email:
+        raise HTTPException(400, "El email debe tener dominio ucatolica.edu.co")
+
     # Validar que la cedula sea numerica
     if not cedula.isdigit():
         raise HTTPException(400, "La cedula debe ser numerica")
