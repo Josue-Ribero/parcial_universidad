@@ -219,40 +219,6 @@ async def cursosPorCreditos(session: SessionDep, horario: HorarioCurso):
 
 
 
-# READ - Obtener un curso filtrado por creditos y codigo
-@router.get("/{creditos}/{codigo}", response_model=Curso)
-async def cursoPorCreditosYcodigo(creditos: CreditosCurso, codigo: str, session: SessionDep):
-
-    """
-    Obtener un curso específico por créditos y código.
-
-    Args:
-        creditos (CreditosCurso): Cantidad de créditos.
-        codigo (str): Código del curso.
-        session (SessionDep): Sesión de base de datos.
-
-    Returns:
-        Curso: El curso que cumple ambas condiciones.
-
-    Raises:
-        HTTPException: 404 si no se encuentra o no coincide en créditos.
-    """
-
-    # Convertir el codigo a mayuscula
-    codigo = codigo.upper()
-
-    cursoDB = session.exec(select(Curso).where(Curso.creditos == creditos or Curso.codigo == codigo)).first()
-    # Si no existe un estudiante con ese email
-    if not cursoDB:
-        raise HTTPException(404, f"Curso no encontrado")
-    # Si el estudiante no esta en el semestre ingresado
-    if cursoDB.creditos != creditos:
-        raise HTTPException(404, f"Curso con codigo {codigo} no tiene {creditos.value} creditos")
-    
-    return cursoDB
-
-
-
 # READ - Estudiantes matriculados en un curso
 @router.get("/{codigo}/estudiantes", response_model=list[Estudiante])
 async def estudiantesPorCurso(codigo: str, session: SessionDep):
@@ -286,6 +252,40 @@ async def estudiantesPorCurso(codigo: str, session: SessionDep):
         raise HTTPException(404, "No hay estudiantes en ese curso")
     
     return estudiantesEnCurso
+
+
+
+# READ - Obtener un curso filtrado por creditos y codigo
+@router.get("/{creditos}/{codigo}", response_model=Curso)
+async def cursoPorCreditosYcodigo(creditos: CreditosCurso, codigo: str, session: SessionDep):
+
+    """
+    Obtener un curso específico por créditos y código.
+
+    Args:
+        creditos (CreditosCurso): Cantidad de créditos.
+        codigo (str): Código del curso.
+        session (SessionDep): Sesión de base de datos.
+
+    Returns:
+        Curso: El curso que cumple ambas condiciones.
+
+    Raises:
+        HTTPException: 404 si no se encuentra o no coincide en créditos.
+    """
+
+    # Convertir el codigo a mayuscula
+    codigo = codigo.upper()
+
+    cursoDB = session.exec(select(Curso).where(Curso.creditos == creditos or Curso.codigo == codigo)).first()
+    # Si no existe un estudiante con ese email
+    if not cursoDB:
+        raise HTTPException(404, f"Curso no encontrado")
+    # Si el estudiante no esta en el semestre ingresado
+    if cursoDB.creditos != creditos:
+        raise HTTPException(404, f"Curso con codigo {codigo} no tiene {creditos.value} creditos")
+    
+    return cursoDB
 
 
 
@@ -383,4 +383,4 @@ async def eliminarCurso(codigo: str, session: SessionDep):
     session.delete(cursoDB)
     session.commit() # Guardar los cambios
 
-    return {"Mensaje": "Estudiante eliminado correctamente"}
+    return {"Mensaje": "Curso eliminado correctamente"}
