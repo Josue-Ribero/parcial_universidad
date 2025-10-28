@@ -140,7 +140,14 @@ async def cursosDeEstudiante(cedula: str, session: SessionDep):
         raise HTTPException(404, "Estudiante no encontrado")
 
     # Validar si el estudiante existe
-    estudianteDB = session.exec(select(Matricula).where(Matricula.cedula == cedula, Matricula.matriculado == EstadoMatricula.MATRICULADO)).first()
+    estudianteDB = session.exec(
+        select(Matricula).where(
+            Matricula.cedula == cedula,
+            Matricula.matriculado == EstadoMatricula.MATRICULADO or
+            Matricula.matriculado == EstadoMatricula.FINALIZADO
+            )
+        ).first()
+    
     if not estudianteDB:
         raise HTTPException(404, "Estudiante sin matriculas activas")
 
