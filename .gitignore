@@ -1,0 +1,7 @@
+# DB
+*.db
+*.sqlite3
+db/
+
+# pycache
+__pycache__/
