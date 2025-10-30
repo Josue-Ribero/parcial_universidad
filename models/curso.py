@@ -25,7 +25,7 @@ class CursoBase(SQLModel):
         creditos (CreditosCurso): Cantidad de créditos académicos del curso.
         horario (HorarioCurso): Horario asignado al curso.
     """
-    codigo: Optional[str] = Field(default=None, min_length=7, max_length=7)
+    codigo: Optional[str] = Field(default=None, unique=True, min_length=7, max_length=7)
     nombre: Optional[str] = Field(default=None)
     creditos: CreditosCurso = Field(default=CreditosCurso.DOS)
     horario: HorarioCurso = Field(default=HorarioCurso.SIETE_A_NUEVE)
