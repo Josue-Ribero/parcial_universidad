@@ -412,13 +412,11 @@ async def eliminarEstudiante(cedula: str, session: SessionDep):
     for matricula in matriculasDB:
         # Determinar razón de eliminación según estado de la matricula
         if matricula.matriculado == EstadoMatricula.FINALIZADO:
-            razon = "Curso finalizado - estudiante eliminado"
+            razon = "Estudiante eliminado - curso finalizado"
         elif matricula.matriculado == EstadoMatricula.DESMATRICULADO:
-            razon = "Curso desmatriculado - estudiante eliminado"
+            razon = "Estudiante eliminado - curso desmatriculado"
         elif matricula.matriculado == EstadoMatricula.MATRICULADO:
-            razon = "Curso en progreso - estudiante eliminado"
-        else:
-            razon = "Estado desconocido - estudiante eliminado"
+            razon = "Estudiante eliminado - curso en progreso"
 
         matriculaHistorica = MatriculaHistorica(
             codigo=matricula.codigo,
