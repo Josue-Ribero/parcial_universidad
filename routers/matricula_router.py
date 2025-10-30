@@ -124,7 +124,7 @@ async def listaMatriculas(session: SessionDep):
         list[Matricula]: Matrículas activas.
     """
 
-    listaMatriculas = session.exec(select(Matricula).where(Matricula.matriculado == EstadoMatricula.MATRICULADO)).all()
+    listaMatriculas = session.exec(select(Matricula)).all()
     return listaMatriculas
 
 
