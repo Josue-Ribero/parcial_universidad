@@ -13,7 +13,7 @@ from sqlmodel import select
 from ..models.curso import Curso, CursoHistorico
 from ..models.matricula import Matricula, MatriculaHistorica
 from ..models.estudiante import Estudiante
-from ..utils.enum import CreditosCurso, HorarioCurso
+from ..utils.enum import CreditosCurso, HorarioCurso, EstadoMatricula
 
 router = APIRouter(prefix="/curso", tags=["Cursos"])
 
@@ -253,8 +253,16 @@ async def estudiantesPorCurso(codigo: str, session: SessionDep):
     # Si no existe el curso
     if not cursoDB:
         raise HTTPException(404, "El curso no existe")
-
-    estudiantesEnCurso = session.exec(select(Estudiante).join(Matricula, Matricula.cedula == Estudiante.cedula).where(Matricula.codigo == codigo)).all()
+    
+    # Validar que exista la matricula activa
+    estudiantesEnCurso = session.exec(
+        select(Estudiante).join(
+            Matricula, Matricula.cedula == Estudiante.cedula).where(
+                Matricula.codigo == codigo,
+                Matricula.matriculado == EstadoMatricula.MATRICULADO
+            )
+        ).all()
+    
     # Si no hay estudiantes en ese curso
     if len(estudiantesEnCurso) == 0:
         raise HTTPException(404, "No hay estudiantes en ese curso")
