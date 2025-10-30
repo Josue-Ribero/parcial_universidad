@@ -138,9 +138,9 @@ async def estudiantePorCedula(cedula: str, session: SessionDep):
     if not 7 <= len(cedula) <= 10:
         raise HTTPException(400, "La cedula debe tener entre 7 y 10 numeros")
 
-    # Validar si existe el codigo
+    # Verificar que el estudiante exista
     estudianteDB = session.exec(select(Estudiante).where(Estudiante.cedula == cedula)).first()
-    # Si no existe el curso con ese codigo
+    # Si no existe el estudiante
     if not estudianteDB:
         raise HTTPException(404, "Estudiante no encontrado")
     
@@ -173,9 +173,9 @@ async def estudiantePorCedula(email: str, session: SessionDep):
     if "@ucatolica.edu.co" not in email:
         raise HTTPException(400, "El email debe tener dominio ucatolica.edu.co")
 
-    # Validar si existe el codigo
+    # Validar si existe el email
     estudianteDB = session.exec(select(Estudiante).where(Estudiante.email == email)).first()
-    # Si no existe el curso con ese codigo
+    # Si no existe el estudiante con ese email
     if not estudianteDB:
         raise HTTPException(404, "Estudiante no encontrado")
     
@@ -233,7 +233,7 @@ async def estudiantesPorNombre(nombre: str, session: SessionDep):
 
     # Validar si existe el nombre
     estudianteDB = session.exec(select(Estudiante).where(Estudiante.nombre == nombre)).first()
-    # Si no existe el curso con ese nombre
+    # Si no existe el estudiante con ese nombre
     if not estudianteDB:
         raise HTTPException(404, "Estudiante no encontrado")
     
@@ -267,9 +267,9 @@ async def misCursos(cedula: str, session: SessionDep):
     if not 7 <= len(cedula) <= 10:
         raise HTTPException(400, "La cedula debe tener entre 7 y 10 numeros")
     
-    # Validar si existe el codigo
+    # Verificar que el estudiante exista
     estudianteDB = session.exec(select(Estudiante).where(Estudiante.cedula == cedula)).first()
-    # Si no existe el curso con ese codigo
+    # Si no existe el estudiante
     if not estudianteDB:
         raise HTTPException(404, "Estudiante no encontrado")
 
@@ -356,9 +356,9 @@ async def actualizarJornadaCurso(session: SessionDep, cedula: str, semestre: Sem
     if not 7 <= len(cedula) <= 10:
         raise HTTPException(400, "La cedula debe tener entre 7 y 10 numeros")
 
-    # Verificar que el curso exista
+    # Verificar que el estudiante exista
     estudianteDB = session.exec(select(Estudiante).where(Estudiante.cedula == cedula)).first()
-    # Si no existe el curso
+    # Si no existe el estudiante
     if not estudianteDB:
         raise HTTPException(404, "Estudiante no encontrado")
     
@@ -401,9 +401,9 @@ async def eliminarEstudiante(cedula: str, session: SessionDep):
     if not 7 <= len(cedula) <= 10:
         raise HTTPException(400, "La cedula debe tener entre 7 y 10 numeros")
 
-    # Validar si ya existe el estudiante
+    # Verificar que el estudiante exista
     estudianteDB = session.exec(select(Estudiante).where(Estudiante.cedula == cedula)).first()
-    # Si no existe la matricula
+    # Si no existe el estudiante
     if not estudianteDB:
         raise HTTPException(404, "Estudiante no encontrado")
     
