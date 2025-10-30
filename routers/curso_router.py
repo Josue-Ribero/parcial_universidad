@@ -46,21 +46,21 @@ async def crearCurso(
     Raises:
         HTTPException: 400 si el código ya existe o no tiene 7 caracteres.
     """
+    
+    # Convertir el codigo a mayuscula
+    codigo = codigo.upper()
 
     # Validar si el curso ya existe
     cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).first()
     if cursoDB:
         raise HTTPException(400, "Ya hay un curso registrado con ese codigo")
-    
-    # Convertir el codigo a mayuscula
-    codigo = codigo.upper()
 
     # Convertir el nombre a mayusculas
     nombre = nombre.upper()
 
     # Validar que el codigo sea valido
     if not len(codigo) == 7:
-        raise HTTPException(400, "El codigo debe tener entre 7 caracteres")
+        raise HTTPException(400, "El codigo debe tener 7 caracteres")
 
     # Si no existe, lo crea
     nuevoCurso = Curso(
@@ -127,7 +127,7 @@ async def cursosPorCodigo(codigo: str, session: SessionDep):
 
     # Validar que el codigo sea valido
     if not len(codigo) == 7:
-        raise HTTPException(400, "El codigo debe tener entre 7 caracteres")
+        raise HTTPException(400, "El codigo debe tener 7 caracteres")
 
     # Validar si existe el codigo
     cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).first()
@@ -246,7 +246,7 @@ async def estudiantesPorCurso(codigo: str, session: SessionDep):
 
     # Validar que el codigo sea valido
     if not len(codigo) == 7:
-        raise HTTPException(400, "El codigo debe tener entre 7 caracteres")
+        raise HTTPException(400, "El codigo debe tener 7 caracteres")
 
     # Validar si el codigo existe
     cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).first()
@@ -287,7 +287,7 @@ async def cursoPorCreditosYcodigo(creditos: CreditosCurso, codigo: str, session:
 
     # Validar que el codigo sea valido
     if not len(codigo) == 7:
-        raise HTTPException(400, "El codigo debe tener entre 7 caracteres")
+        raise HTTPException(400, "El codigo debe tener 7 caracteres")
 
     cursoDB = session.exec(select(Curso).where(Curso.creditos == creditos or Curso.codigo == codigo)).first()
     # Si no existe un estudiante con ese email
@@ -325,7 +325,7 @@ async def actualizarHorarioCurso(session: SessionDep, codigo: str, horario: Hora
 
     # Validar que el codigo sea valido
     if not len(codigo) == 7:
-        raise HTTPException(400, "El codigo debe tener entre 7 caracteres")
+        raise HTTPException(400, "El codigo debe tener 7 caracteres")
 
     # Verificar que el curso exista
     cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).first()
@@ -373,7 +373,7 @@ async def eliminarCurso(codigo: str, session: SessionDep):
 
     # Validar que el codigo sea valido
     if not len(codigo) == 7:
-        raise HTTPException(400, "El codigo debe tener entre 7 caracteres")
+        raise HTTPException(400, "El codigo debe tener 7 caracteres")
 
     # Validar si ya existe el curso
     cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).first()
