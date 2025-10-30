@@ -77,6 +77,9 @@ async def matricularEstudiante(
     if matriculaDB and matriculaDB.matriculado == EstadoMatricula.MATRICULADO:
         raise HTTPException(400, "El estudiante ya esta matriculado en ese curso")
     
+    if matriculaDB and matriculaDB.matriculado == EstadoMatricula.FINALIZADO:
+        raise HTTPException(400, "El estudiante ya estuvo matriculado en ese curso")
+    
     # Verificar si el estudiante ya esta matriculado en otro curso (esta activo)
     matriculadoEnOtroCurso = session.exec(select(Matricula).where(
         Matricula.cedula == cedula,
