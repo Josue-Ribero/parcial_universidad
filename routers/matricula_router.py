@@ -10,8 +10,10 @@ y consultar las matrículas activas por estudiante o curso.
 from fastapi import APIRouter, HTTPException, Form
 from ..db.db import SessionDep
 from sqlmodel import select
+from sqlalchemy import or_
 from ..models.matricula import Matricula
 from ..models.estudiante import Estudiante
+from ..models.curso import Curso
 from ..utils.enum import EstadoMatricula
 
 router = APIRouter(prefix="/matricula", tags=["Matriculas"])
@@ -45,6 +47,16 @@ async def matricularEstudiante(
     # Convertir el codigo a mayuscula
     codigo = codigo.upper()
 
+    # Validar que el codigo sea valido
+    if not len(codigo) == 7:
+        raise HTTPException(400, "El codigo debe tener 7 caracteres")
+    
+    # Verificar que el curso exista
+    cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).first()
+    # Si no existe el curso
+    if not cursoDB:
+        raise HTTPException(404, f"Curso no encontrado")
+
     # Validar que la cedula sea numerica
     if not cedula.isdigit():
         raise HTTPException(400, "La cedula debe ser numerica")
@@ -52,7 +64,13 @@ async def matricularEstudiante(
     # Validar que la CC sea valida
     if not 7 <= len(cedula) <= 10:
         raise HTTPException(400, "La cedula debe tener entre 7 y 10 numeros")
-
+    
+    # Verificar que el estudiante exista
+    estudianteDB = session.exec(select(Estudiante).where(Estudiante.cedula == cedula)).first()
+    # Si no existe el estudiante
+    if not estudianteDB:
+        raise HTTPException(404, "Estudiante no encontrado")
+    
     # Validar si el matricula ya existe
     matriculaDB = session.exec(select(Matricula).where(Matricula.codigo == codigo, Matricula.cedula == cedula)).first()
     # Validar si el estudiante ya esta con estado MATRICULADO en ese curso
@@ -132,6 +150,10 @@ async def cursosDeEstudiante(cedula: str, session: SessionDep):
     # Validar que la cedula sea numerica
     if not cedula.isdigit():
         raise HTTPException(400, "La cedula debe ser numerica")
+    
+    # Validar que la CC sea valida
+    if not 7 <= len(cedula) <= 10:
+        raise HTTPException(400, "La cedula debe tener entre 7 y 10 numeros")
 
     # Validar si ya existe el estudiante
     estudianteDB = session.exec(select(Estudiante).where(Estudiante.cedula == cedula)).first()
@@ -140,13 +162,12 @@ async def cursosDeEstudiante(cedula: str, session: SessionDep):
         raise HTTPException(404, "Estudiante no encontrado")
 
     # Validar si el estudiante existe
-    estudianteDB = session.exec(
-        select(Matricula).where(
-            Matricula.cedula == cedula,
-            Matricula.matriculado == EstadoMatricula.MATRICULADO or
-            Matricula.matriculado == EstadoMatricula.FINALIZADO
-            )
-        ).first()
+    consulta = select(Matricula).where(Matricula.cedula == cedula)
+    consulta = consulta.where(
+        (Matricula.matriculado == EstadoMatricula.MATRICULADO) |
+        (Matricula.matriculado == EstadoMatricula.FINALIZADO)
+    )
+    estudianteDB = session.exec(consulta).first()
     
     if not estudianteDB:
         raise HTTPException(404, "Estudiante sin matriculas activas")
@@ -179,6 +200,17 @@ async def estudiantesEnCurso(codigo: str, session: SessionDep):
     # Convertir el codigo a mayuscula
     codigo = codigo.upper()
 
+    # Validar que el codigo sea valido
+    if not len(codigo) == 7:
+        raise HTTPException(400, "El codigo debe tener 7 caracteres")
+    
+    # Verificar que el curso exista
+    cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).first()
+    # Si no existe el curso
+    if not cursoDB:
+        raise HTTPException(404, f"Curso no encontrado")
+    
+    # Verificar que estudiantes estan en ese curso
     matriculaDB = session.exec(select(Matricula).where(Matricula.codigo == codigo, Matricula.matriculado == EstadoMatricula.MATRICULADO)).all()
     if not matriculaDB:
         raise HTTPException(404, "No hay estudiantes en este curso")
@@ -216,6 +248,16 @@ async def actualizarMatricula(
     # Convertir el codigo a mayuscula
     codigo = codigo.upper()
 
+    # Validar que el codigo sea valido
+    if not len(codigo) == 7:
+        raise HTTPException(400, "El codigo debe tener 7 caracteres")
+    
+    # Verificar que el curso exista
+    cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).first()
+    # Si no existe el curso
+    if not cursoDB:
+        raise HTTPException(404, f"Curso no encontrado")
+
     # Validar que la cedula sea numerica
     if not cedula.isdigit():
         raise HTTPException(400, "La cedula debe ser numerica")
@@ -223,6 +265,12 @@ async def actualizarMatricula(
     # Validar que la CC sea valida
     if not 7 <= len(cedula) <= 10:
         raise HTTPException(400, "La cedula debe tener entre 7 y 10 numeros")
+    
+    # Verificar que el estudiante exista
+    estudianteDB = session.exec(select(Estudiante).where(Estudiante.cedula == cedula)).first()
+    # Si no existe el estudiante
+    if not estudianteDB:
+        raise HTTPException(404, "Estudiante no encontrado")
 
     # Verificar que exista la matricula
     matriculaDB = session.get(Matricula, matriculaID)
@@ -282,6 +330,16 @@ async def finalizarCurso(cedula: str, codigo: str, session: SessionDep):
     # Convertir el codigo a mayuscula
     codigo = codigo.upper()
 
+    # Validar que el codigo sea valido
+    if not len(codigo) == 7:
+        raise HTTPException(400, "El codigo debe tener 7 caracteres")
+    
+    # Verificar que el curso exista
+    cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).first()
+    # Si no existe el curso
+    if not cursoDB:
+        raise HTTPException(404, f"Curso no encontrado")
+
     # Validar que la cedula sea numerica
     if not cedula.isdigit():
         raise HTTPException(400, "La cedula debe ser numerica")
@@ -289,10 +347,10 @@ async def finalizarCurso(cedula: str, codigo: str, session: SessionDep):
     # Validar que la CC sea valida
     if not 7 <= len(cedula) <= 10:
         raise HTTPException(400, "La cedula debe tener entre 7 y 10 numeros")
-
-    # Validar si ya existe el estudiante
+    
+    # Verificar que el estudiante exista
     estudianteDB = session.exec(select(Estudiante).where(Estudiante.cedula == cedula)).first()
-    # Si no existe la matricula
+    # Si no existe el estudiante
     if not estudianteDB:
         raise HTTPException(404, "Estudiante no encontrado")
 
@@ -346,6 +404,16 @@ async def rematricularEstudiante(cedula: str, codigo: str, session: SessionDep):
     # Convertir el codigo a mayuscula
     codigo = codigo.upper()
 
+    # Validar que el codigo sea valido
+    if not len(codigo) == 7:
+        raise HTTPException(400, "El codigo debe tener 7 caracteres")
+    
+    # Verificar que el curso exista
+    cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).first()
+    # Si no existe el curso
+    if not cursoDB:
+        raise HTTPException(404, f"Curso no encontrado")
+
     # Validar que la cedula sea numerica
     if not cedula.isdigit():
         raise HTTPException(400, "La cedula debe ser numerica")
@@ -353,10 +421,10 @@ async def rematricularEstudiante(cedula: str, codigo: str, session: SessionDep):
     # Validar que la CC sea valida
     if not 7 <= len(cedula) <= 10:
         raise HTTPException(400, "La cedula debe tener entre 7 y 10 numeros")
-
-    # Validar si ya existe el estudiante
+    
+    # Verificar que el estudiante exista
     estudianteDB = session.exec(select(Estudiante).where(Estudiante.cedula == cedula)).first()
-    # Si no existe la matricula
+    # Si no existe el estudiante
     if not estudianteDB:
         raise HTTPException(404, "Estudiante no encontrado")
 
@@ -419,6 +487,16 @@ async def desmatricularEstudiante(cedula: str, codigo: str, session: SessionDep)
     # Convertir el codigo a mayuscula
     codigo = codigo.upper()
 
+    # Validar que el codigo sea valido
+    if not len(codigo) == 7:
+        raise HTTPException(400, "El codigo debe tener 7 caracteres")
+    
+    # Verificar que el curso exista
+    cursoDB = session.exec(select(Curso).where(Curso.codigo == codigo)).first()
+    # Si no existe el curso
+    if not cursoDB:
+        raise HTTPException(404, f"Curso no encontrado")
+
     # Validar que la cedula sea numerica
     if not cedula.isdigit():
         raise HTTPException(400, "La cedula debe ser numerica")
@@ -426,10 +504,10 @@ async def desmatricularEstudiante(cedula: str, codigo: str, session: SessionDep)
     # Validar que la CC sea valida
     if not 7 <= len(cedula) <= 10:
         raise HTTPException(400, "La cedula debe tener entre 7 y 10 numeros")
-
-    # Validar si ya existe el estudiante
+    
+    # Verificar que el estudiante exista
     estudianteDB = session.exec(select(Estudiante).where(Estudiante.cedula == cedula)).first()
-    # Si no existe la matricula
+    # Si no existe el estudiante
     if not estudianteDB:
         raise HTTPException(404, "Estudiante no encontrado")
 
